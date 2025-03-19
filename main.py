@@ -5,7 +5,7 @@ import time
 
 # --- Firebase 설정 ---
 if not firebase_admin._apps:
-    cred = credentials.Certificate(r".json")
+    cred = credentials.Certificate(r"sejincoin-project-firebase-adminsdk-fbsvc-7f7c09536c.json")
 
   # Firebase JSON 키 파일 로드
     firebase_admin.initialize_app(cred)
