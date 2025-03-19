@@ -89,7 +89,7 @@ if password == ADMIN_PASSWORD:
                     "기록": firestore.ArrayUnion([1])
                 })
                 st.success(f"{selected_student}에게 1코인 부여!")
-                time.sleep(1)
+                time.sleep(45)
                 st.experimental_rerun()
 
         with col2:
@@ -99,7 +99,7 @@ if password == ADMIN_PASSWORD:
                     "기록": firestore.ArrayUnion([-1])
                 })
                 st.warning(f"{selected_student}에게서 1코인 회수!")
-                time.sleep(1)
+                time.sleep(45)
                 st.experimental_rerun()
 
     else:
