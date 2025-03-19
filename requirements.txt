@@ -8,3 +8,4 @@ bcrypt
 firebase_admin
 gspread
 oauth2client
+google.oauth2.service_account
