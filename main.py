@@ -4,11 +4,15 @@ from firebase_admin import credentials, firestore
 import time
 
 # --- Firebase 설정 ---
-if not firebase_admin._apps:
+try:
+    # Firebase 서비스 계정 키 파일 경로를 정확하게 설정하세요
     cred = credentials.Certificate(r"C:\Users\이은규\Downloads\student_check-main\firebase_config.json")
 
-  # Firebase JSON 키 파일 로드
-    firebase_admin.initialize_app(cred)
+    # Firebase 초기화
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred)
+except:
+    print("fail!")  
 
 db = firestore.client()  # Firestore 클라이언트
 
