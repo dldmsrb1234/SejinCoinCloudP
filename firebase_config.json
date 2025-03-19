@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "sejincoin-project",
+  "private_key_id": "4e2e16248a2e3d7e5d8f81c94e419ee7f6b97cb9",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCmLIsUqrSR0zdk\nIGxrNGdsqOEG0cZKrinf+O75X2Q4TynlinaPxBeoePkzILLw/opVnRVTACJK2rzn\nLg9qyVoR+FSfU6sTzEqTr9uV8oxOSMjrK6dgIqiSijn/iM9YYCmoiPCyDF3L7fmr\n108WwIheedp0DJRUCpBZ8O47Qq+xHjWn2nw1iuD1c1gyvqjclHZdgerJ+r2NAuaO\ndgM5dDObu6DNXQXm54rfnm30kq4C0aoQfb4yRykTApyxDRH77Ug/vQ1jWISXR8W6\n6L2JyHow6Ezd+4u98BAOIESoMkDngXqv8QF6CgmWv0IFwy/1MfkufNmCHS9hAaYu\n7mzMDeB/AgMBAAECggEATiSDMLBHoo17LkQLB+zIN/JAg4bxItw8x9yVcEI57DrZ\n3l3a/Cc/4tMkiLT3QNnJ7pGkXfghqCatj177FAHkr6+iB5x+Rhya81FOxvgcn5Gd\nne1U06HouKR0uqQ4sPvjiyP+YBPtpcDeWD8zK2VVm2vc3RavR8gB8rGYLdjhqr1i\nWMiH0U51c6Q0EEJ5oqS44bcjFszotVTVMPlua3Tx7Xq96dUyuGvIAzQUFFWOTtBS\n7XpriHaMeFqBY4Nwc/sTDf5cG/R66gv17tzZbbF9YyEcTSlu8pWNuQfvFPeqZdsI\nh3bbuC5V3driLQQHBEI3TTq93FbreEHodCqgu5Kp+QKBgQDX9zQkxvNR5MarpezE\n6IoJTe/WYAbjZL9MShpbB6iWuzZJky/OhA5ExAVWIP/Pn1Cb0+rEBoaAKmuQTtOd\ncBfEY3Kqmiv7p4Z7YSXeoYVGt1APErK6z3mEdsPVkSqw+VTklDIQg9qIKlnclc8A\nPnmqhok16Kpkg7Ya4HETemHTiQKBgQDE+nF/ZInjVfSKuKqeA5ig0PRe0UeTSFPc\n3yoxBfypIUp6+GlcTeQSt/Ip2CubYS96SJMNSRynI9moZELRMybIizwJA0IAIQ98\nV4Dr4tnzS+MZB9A7JRvSNK864ygDcoI96XqTWmfKllWjX3afPtPSm8HSsp2JQKPb\n9sp+ejWpxwKBgQCbsozVNtmU4OqaNTVNgJiDvLx8QR62MZv41DPMDOluQeoRgRum\nN25SBUATqBbFCIaE0XMff9TX8b06fJnzlyyLWWcBt8Sd2VkK+i7jIm+DXAVL2J8i\nLxHcfgMRpWax0A9z+6NcZLLYGDBQ53AlLOVqGzQwuVyeupY/KjBbao+8gQKBgQCx\nCshoT9z/T4p0BHaVf3X3VNfPQRqr7h4yLwKk/VSSTzG6RPut0vRjPqGRqpHHHhqm\nNgS1tDjkoPxItZS4otkA9uQG1b7EjvJ0N9HQMhzi6Bo9rSAjiL7wuBmnO/QC5TDa\npLdfKaqQE371UCA2ESoh6YzT62ZcrpSYZ8Co3P7OkQKBgHJ+sQXtX7bodaFesetU\ngiqAm4fcbKGf7lAHico2BEwZ7dDsRc3fAS13cqwFYrzEzqZXuJVVTGmHpQLIYe3S\nfY0ouMSbN8tbvwgH/jTGxPvK6XS57vXWGeUH1E6qY/0fOgxqDmi5vxeA7gs38QTZ\nBiWAbhf6WyVv29njsQRklMQd\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@sejincoin-project.iam.gserviceaccount.com",
+  "client_id": "113311923837986681421",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40sejincoin-project.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
