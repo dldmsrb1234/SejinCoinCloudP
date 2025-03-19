@@ -6,3 +6,5 @@ google-auth-oauthlib
 google-auth-httplib2
 bcrypt
 firebase_admin
+gspread
+oauth2client.service_account
