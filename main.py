@@ -33,7 +33,7 @@ st.title("세진코인 관리 시스템")
 
 # 구글 스프레드시트에서 데이터 가져오기
 sheet_name = "학생코인관리"  # 사용하고자 하는 스프레드시트 이름
-client = authenticate_google_sheets('path_to_your_service_account_json_file.json')
+client = authenticate_google_sheets('sejincoin-project-8a5959328de5.json')
 students_data = get_student_data(sheet_name)
 
 # 학생 이름 목록
