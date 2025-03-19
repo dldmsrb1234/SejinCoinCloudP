@@ -1,6 +1,6 @@
 import streamlit as st
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import ServiceAccountCredentials
 
 # Google Sheets 인증 함수
 def authenticate_google_sheets(json_keyfile_path):
