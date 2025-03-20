@@ -9,7 +9,7 @@ from google.oauth2.service_account import Credentials
 def connect_gsheet():
     # Google API 인증
     creds = Credentials.from_service_account_info(
-        st.secrets["Drive.json"],
+        st.secrets["sejincoins2-firebase-adminsdk-fbsvc-2703b60624"],
         scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     )
     client = gspread.authorize(creds)
