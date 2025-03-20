@@ -7,3 +7,4 @@ google-auth-httplib2
 bcrypt
 firebase_admin
 google-cloud-firestore
+gspread
