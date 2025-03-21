@@ -28,17 +28,32 @@ def save_data(data):
     sheet.clear()
     sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
-# --- UI 스타일 ---
+# --- UI 스타일 복구 ---
 st.markdown(
     """
     <style>
+    /* 배경화면 복구 */
     .stApp {
-        background: black !important;
+        background: url('https://global-assets.benzinga.com/kr/2025/02/16222019/1739712018-Cryptocurrency-Photo-by-SvetlanaParnikov.jpeg') repeat !important;
+        background-size: 150px 150px !important;
     }
     
+    /* 기본 텍스트 스타일 */
     html, body, [class*="css"] {
         color: #ffffff;
         font-family: 'Orbitron', sans-serif;
+    }
+
+    /* 버튼 스타일 */
+    .stButton>button {
+         color: #fff;
+         font-weight: bold;
+         border: none;
+         border-radius: 8px;
+         padding: 10px 20px;
+         font-size: 16px;
+         transition: transform 0.2s ease-in-out;
+         box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
     }
 
     /* 버튼 스타일 동적 변경 */
@@ -177,5 +192,4 @@ elif user_type == "학생용":
         )
     else:
         st.error("학생 정보를 찾을 수 없습니다.")
-
 
