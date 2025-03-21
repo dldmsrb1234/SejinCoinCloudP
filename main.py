@@ -127,8 +127,25 @@ elif user_type == "학생용":
         student_name = student_data.iloc[0]["학생"]
         student_coins = student_data.iloc[0]["세진코인"]
 
+        # --- 💡 세진코인 개수에 따른 색상 & 이모티콘 설정 ---
+        if student_coins < 0:
+            color = "red"
+            emoji = "😭"
+        elif student_coins == 0:
+            color = "gray"
+            emoji = "😐"
+        elif student_coins >= 10:
+            color = "gold"
+            emoji = "🎉"
+        elif student_coins >= 5:
+            color = "green"
+            emoji = "😆"
+        else:
+            color = "white"
+            emoji = "🙂"
+
         st.markdown(
-            f"<h2 style='text-align: center; color: #FFD700;'>{student_name}님의 세진코인은 {student_coins}개입니다! 🎉</h2>",
+            f"<h2 style='text-align: center; color: {color};'>{student_name}님의 세진코인은 {student_coins}개입니다! {emoji}</h2>",
             unsafe_allow_html=True,
         )
     else:
