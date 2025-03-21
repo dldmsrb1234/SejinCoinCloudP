@@ -133,4 +133,39 @@ if password == ADMIN_PASSWORD:
 
     if st.button("세진코인 변경하기"):
         if coin_amount != 0:
-            
+            data.at[student_index, "세진코인"] += coin_amount
+            record_list = ast.literal_eval(data.at[student_index, "기록"])
+            record_list.append(coin_amount)
+            data.at[student_index, "기록"] = str(record_list)
+            save_data(data)
+
+            if coin_amount > 0:
+                st.success(f"{selected_student}에게 세진코인 {coin_amount}개를 부여했습니다!")
+            else:
+                st.warning(f"{selected_student}에게서 세진코인 {-coin_amount}개를 회수했습니다!")
+
+            time.sleep(1.5)  # 🔄 Google Sheets 동기화 대기
+            st.experimental_rerun()
+        else:
+            st.error("변경할 코인 수를 입력하세요.")
+
+    # --- 🚨 초기화 버튼 ---
+    if st.button("⚠️ 세진코인 초기화"):
+        data.at[student_index, "세진코인"] = 0
+        data.at[student_index, "기록"] = "[]"
+        save_data(data)
+
+        st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
+
+        time.sleep(1.5)  # 🔄 Google Sheets 동기화 대기
+        st.experimental_rerun()
+
+    # --- 📊 선택한 학생의 최신 데이터 표시 ---
+    updated_student_data = data.loc[[student_index]]
+    st.subheader(f"{selected_student}의 업데이트된 세진코인")
+    st.dataframe(updated_student_data)
+
+# --- 📌 전체 학생 현황 보기 ---
+if st.checkbox("전체 학생 세진코인 현황 보기"):
+    st.subheader("전체 학생 세진코인 현황")
+    st.dataframe(data)
