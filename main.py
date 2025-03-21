@@ -33,8 +33,7 @@ st.markdown(
     """
     <style>
     .stApp {
-        background: url('https://global-assets.benzinga.com/kr/2025/02/16222019/1739712018-Cryptocurrency-Photo-by-SvetlanaParnikov.jpeg') repeat !important;
-        background-size: 150px 150px !important;
+        background: black !important;
     }
     
     html, body, [class*="css"] {
@@ -42,26 +41,17 @@ st.markdown(
         font-family: 'Orbitron', sans-serif;
     }
 
-    .stButton>button {
-         color: #fff;
-         font-weight: bold;
-         border: none;
-         border-radius: 8px;
-         padding: 10px 20px;
-         font-size: 16px;
-         transition: transform 0.2s ease-in-out;
-         box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
-    }
-
-    /* 세진코인 텍스트 박스 스타일 */
-    .coin-display {
-        text-align: center;
-        padding: 15px;
-        border-radius: 10px;
-        font-size: 24px;
-        font-weight: bold;
-        margin-top: 20px;
-        display: inline-block;
+    /* 버튼 스타일 동적 변경 */
+    .coin-change-btn {
+        color: white !important;
+        font-weight: bold !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 10px 20px !important;
+        font-size: 16px !important;
+        transition: transform 0.2s ease-in-out !important;
+        box-shadow: 0px 4px 6px rgba(0,0,0,0.3) !important;
+        width: 100%;
     }
     </style>
     """,
@@ -94,7 +84,29 @@ if user_type == "교사용":
     if password == ADMIN_PASSWORD:
         coin_amount = st.number_input("부여 또는 회수할 코인 수를 입력하세요 (음수 입력 시 회수)", min_value=-100, max_value=100, value=1)
 
-        if st.button("세진코인 변경하기"):
+        # 버튼 색상 결정
+        if coin_amount > 0:
+            btn_color = "#32CD32"  # 초록색
+        elif coin_amount < 0:
+            btn_color = "#FF4C4C"  # 빨간색
+        else:
+            btn_color = "#D3D3D3"  # 회색
+
+        # 버튼 HTML & CSS 적용
+        st.markdown(
+            f"""
+            <style>
+            .coin-change-btn {{
+                background-color: {btn_color} !important;
+            }}
+            </style>
+            <button class="coin-change-btn" onclick="document.getElementById('coin_submit').click()">세진코인 변경하기</button>
+            <button id="coin_submit" style="display: none;"></button>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if st.button("세진코인 변경하기", key="coin_submit"):
             if coin_amount != 0:
                 data.at[student_index, "세진코인"] += coin_amount
                 record_list = ast.literal_eval(data.at[student_index, "기록"])
@@ -155,10 +167,9 @@ elif user_type == "학생용":
             bg_color = "#FFFFFF"  # 흰색
             emoji = "🙂"
 
-        # --- HTML을 이용한 텍스트 출력 ---
         st.markdown(
             f"""
-            <div class="coin-display" style="background-color: {bg_color}; color: black;">
+            <div class="coin-display" style="background-color: {bg_color}; color: black; text-align:center; padding:15px; border-radius:10px; font-size:24px; font-weight:bold; margin-top:20px;">
                 {student_name}님의 세진코인은 <b>{student_coins}개</b>입니다! {emoji}
             </div>
             """,
@@ -166,4 +177,5 @@ elif user_type == "학생용":
         )
     else:
         st.error("학생 정보를 찾을 수 없습니다.")
+
 
