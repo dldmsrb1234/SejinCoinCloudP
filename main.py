@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import ast
-import time
 import gspread
 from google.oauth2.service_account import Credentials
 
@@ -13,7 +12,10 @@ def connect_gsheet():
         scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     )
     client = gspread.authorize(creds)
-    sheet = client.open("세진코인_관리").sheet1  # 스프레드시트 이름
+
+    # 스프레드시트 URL을 사용하여 열기
+    sheet_url = "https://docs.google.com/spreadsheets/d/1TGcuiSP_ZKN8ijk42v01tM9ZS05jQYlhPTOrv6b1zF0/edit?gid=0#gid=0/edit"  # 여기에 실제 스프레드시트 URL을 넣으세요
+    sheet = client.open_by_url(sheet_url).sheet1  # URL로 스프레드시트 열기
     return sheet
 
 # Google Sheets에서 데이터 로드
@@ -82,3 +84,4 @@ st.dataframe(updated_student_data)
 if st.checkbox("전체 학생 세진코인 현황 보기"):
     st.subheader("전체 학생 세진코인 현황")
     st.dataframe(data)
+
