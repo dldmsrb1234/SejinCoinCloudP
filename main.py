@@ -4,7 +4,7 @@ import ast
 import gspread
 from google.oauth2.service_account import Credentials
 
-ADMIN_PASSWORD = "rlagorhkdWkd"
+ADMIN_PASSWORD = st.secrets["general"]["admin_password"]
 
 # --- Google Sheets API 연결 ---
 def connect_gsheet():
