@@ -55,19 +55,6 @@ st.markdown(
          transition: transform 0.2s ease-in-out;
          box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
     }
-
-    /* 버튼 스타일 동적 변경 */
-    .coin-change-btn {
-        color: white !important;
-        font-weight: bold !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 10px 20px !important;
-        font-size: 16px !important;
-        transition: transform 0.2s ease-in-out !important;
-        box-shadow: 0px 4px 6px rgba(0,0,0,0.3) !important;
-        width: 100%;
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -107,7 +94,7 @@ if user_type == "교사용":
         else:
             btn_color = "#D3D3D3"  # 회색
 
-        # 버튼 HTML & CSS 적용
+        # 버튼 스타일 적용
         st.markdown(
             f"""
             <style>
@@ -115,13 +102,11 @@ if user_type == "교사용":
                 background-color: {btn_color} !important;
             }}
             </style>
-            <button class="coin-change-btn" onclick="document.getElementById('coin_submit').click()">세진코인 변경하기</button>
-            <button id="coin_submit" style="display: none;"></button>
             """,
             unsafe_allow_html=True,
         )
 
-        if st.button("세진코인 변경하기", key="coin_submit"):
+        if st.button("세진코인 변경하기"):
             if coin_amount != 0:
                 data.at[student_index, "세진코인"] += coin_amount
                 record_list = ast.literal_eval(data.at[student_index, "기록"])
