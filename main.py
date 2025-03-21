@@ -115,7 +115,7 @@ st.markdown(
 # --- 타이틀 ---
 st.markdown('<h1 class="title">세진코인 관리 시스템</h1>', unsafe_allow_html=True)
 # 관리자 비밀번호 설정
-ADMIN_PASSWORD = "wjddusdlcjswo"
+
 
 # 데이터 로드
 data = load_data()
