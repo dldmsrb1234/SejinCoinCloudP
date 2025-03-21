@@ -32,19 +32,16 @@ def save_data(data):
 st.markdown(
     """
     <style>
-    /* 배경화면 복구 */
     .stApp {
         background: url('https://global-assets.benzinga.com/kr/2025/02/16222019/1739712018-Cryptocurrency-Photo-by-SvetlanaParnikov.jpeg') repeat !important;
         background-size: 150px 150px !important;
     }
     
-    /* 기본 텍스트 스타일 */
     html, body, [class*="css"] {
         color: #ffffff;
         font-family: 'Orbitron', sans-serif;
     }
 
-    /* 버튼 효과 */
     .stButton>button {
          color: #fff;
          font-weight: bold;
@@ -63,7 +60,7 @@ st.markdown(
 # --- 🎰 로또 긁는 GIF 복구 ---
 st.markdown(
     '<div style="text-align:center;">'
-    '<img class="header-img" src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemVldTNsMGVpMjZzdjhzc3hnbzl0d2szYjNoNXY2ZGt4ZXVtNncyciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/30VBSGB7QW1RJpNcHO/giphy.gif" alt="Lotto Scratch GIF">'
+    '<img class="header-img" src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemVldTNsMGVpMjZzdjhzc3hnbzl0d2szYjNoNXY2ZGt4ZXVtNncyciZlcD12MV9pbnRlcm5naWZfYnlfaWQmY3Q9Zw/30VBSGB7QW1RJpNcHO/giphy.gif" alt="Lotto Scratch GIF">'
     '</div>',
     unsafe_allow_html=True
 )
@@ -73,22 +70,17 @@ user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사�
 
 # --- 🎓 교사용 UI ---
 if user_type == "교사용":
-    # --- 데이터 로드 ---
     data = load_data()
 
-    # --- 반 선택 ---
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
     filtered_data = data[data["반"] == selected_class]
 
-    # --- 학생 선택 ---
     selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
-    # --- 비밀번호 입력 ---
     password = st.text_input("관리자 비밀번호를 입력하세요:", type="password")
 
     if password == ADMIN_PASSWORD:
-        # --- 🎯 코인 추가/차감 ---
         coin_amount = st.number_input("부여 또는 회수할 코인 수를 입력하세요 (음수 입력 시 회수)", min_value=-100, max_value=100, value=1)
 
         if st.button("세진코인 변경하기"):
@@ -106,19 +98,38 @@ if user_type == "교사용":
             else:
                 st.error("변경할 코인 수를 입력하세요.")
 
-        # --- 🚨 초기화 버튼 추가 ---
         if st.button("⚠️ 세진코인 초기화"):
             data.at[student_index, "세진코인"] = 0
             data.at[student_index, "기록"] = "[]"
             save_data(data)
             st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
 
-        # --- 선택한 학생의 업데이트된 데이터 표시 ---
         updated_student_data = data.loc[[student_index]]
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
 
-    # --- 전체 학생 코인 현황 보기 ---
     if st.checkbox("전체 학생 세진코인 현황 보기"):
         st.subheader("전체 학생 세진코인 현황")
         st.dataframe(data)
+
+# --- 🎒 학생용 UI ---
+elif user_type == "학생용":
+    data = load_data()
+
+    selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
+
+    filtered_data = data[data["반"] == selected_class]
+    selected_number = st.selectbox("번호를 선택하세요:", filtered_data["번호"].tolist())
+
+    student_data = filtered_data[filtered_data["번호"] == selected_number]
+
+    if not student_data.empty:
+        student_name = student_data.iloc[0]["학생"]
+        student_coins = student_data.iloc[0]["세진코인"]
+
+        st.markdown(
+            f"<h2 style='text-align: center; color: #FFD700;'>{student_name}님의 세진코인은 {student_coins}개입니다! 🎉</h2>",
+            unsafe_allow_html=True,
+        )
+    else:
+        st.error("학생 정보를 찾을 수 없습니다.")
