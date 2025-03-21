@@ -3,7 +3,7 @@ import pandas as pd
 import ast
 import gspread
 from google.oauth2.service_account import Credentials
-
+ADMIN_PASSWORD = "rlagorhkdWkd"
 # --- Google Sheets API 연결 ---
 def connect_gsheet():
     # Google API 인증
