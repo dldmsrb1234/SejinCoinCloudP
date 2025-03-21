@@ -44,9 +44,10 @@ st.markdown(
         font-family: 'Orbitron', sans-serif;
     }
 
-    /* 버튼 스타일 */
+    /* 모든 버튼을 회색으로 설정 */
     .stButton>button {
-         color: #fff;
+         color: #000000;
+         background-color: #808080;  /* 회색 */
          font-weight: bold;
          border: none;
          border-radius: 8px;
@@ -86,26 +87,6 @@ if user_type == "교사용":
     if password == ADMIN_PASSWORD:
         coin_amount = st.number_input("부여 또는 회수할 코인 수를 입력하세요 (음수 입력 시 회수)", min_value=-100, max_value=100, value=1)
 
-        # 버튼 색상 결정
-        if coin_amount > 0:
-            btn_color = "#32CD32"  # 초록색
-        elif coin_amount < 0:
-            btn_color = "#FF4C4C"  # 빨간색
-        else:
-            btn_color = "#D3D3D3"  # 회색
-
-        # 버튼 스타일 적용
-        st.markdown(
-            f"""
-            <style>
-            .coin-change-btn {{
-                background-color: {btn_color} !important;
-            }}
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
-
         if st.button("세진코인 변경하기"):
             if coin_amount != 0:
                 data.at[student_index, "세진코인"] += coin_amount
@@ -114,9 +95,10 @@ if user_type == "교사용":
                 data.at[student_index, "기록"] = str(record_list)
                 save_data(data)
 
+                # 성공 메시지와 색상
                 if coin_amount > 0:
                     st.success(f"{selected_student}에게 세진코인 {coin_amount}개를 부여했습니다!")
-                else:
+                elif coin_amount < 0:
                     st.warning(f"{selected_student}에게서 세진코인 {-coin_amount}개를 회수했습니다!")
             else:
                 st.error("변경할 코인 수를 입력하세요.")
@@ -177,4 +159,3 @@ elif user_type == "학생용":
         )
     else:
         st.error("학생 정보를 찾을 수 없습니다.")
-
