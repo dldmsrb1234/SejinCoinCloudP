@@ -28,7 +28,7 @@ def save_data(data):
     sheet.clear()
     sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
-# --- 🌟 UI 스타일 복구 ---
+# --- UI 스타일 ---
 st.markdown(
     """
     <style>
@@ -57,7 +57,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- 🎰 로또 긁는 GIF 복구 ---
+# --- 🎰 GIF 추가 ---
 st.markdown(
     '<div style="text-align:center;">'
     '<img class="header-img" src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemVldTNsMGVpMjZzdjhzc3hnbzl0d2szYjNoNXY2ZGt4ZXVtNncyciZlcD12MV9pbnRlcm5naWZfYnlfaWQmY3Q9Zw/30VBSGB7QW1RJpNcHO/giphy.gif" alt="Lotto Scratch GIF">'
@@ -119,9 +119,9 @@ elif user_type == "학생용":
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
 
     filtered_data = data[data["반"] == selected_class]
-    selected_number = st.selectbox("번호를 선택하세요:", filtered_data["번호"].tolist())
+    selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
 
-    student_data = filtered_data[filtered_data["번호"] == selected_number]
+    student_data = filtered_data[filtered_data["학생"] == selected_student]
 
     if not student_data.empty:
         student_name = student_data.iloc[0]["학생"]
