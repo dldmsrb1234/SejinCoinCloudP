@@ -144,7 +144,7 @@ else:
         else:
             return f'<h2 style="color:yellow;">{selected_student}님의 세진코인은 {coins}개입니다. 🎉</h2>'
 
-    # 세진코인 상태 표시
+    # 세진코인 상태 표시 (로또 게임 시작 전)
     st.markdown(get_coin_display(student_coins), unsafe_allow_html=True)
 
     # --- 🎰 로또 시스템 --- 
@@ -196,5 +196,5 @@ else:
             data.at[student_index, "기록"] = str(record_list)
             save_data(data)
 
-            # 다시 세진코인 상태 표시
+            # 다시 세진코인 상태 표시 (로또 후 갱신된 코인 개수)
             st.markdown(get_coin_display(student_coins), unsafe_allow_html=True)
