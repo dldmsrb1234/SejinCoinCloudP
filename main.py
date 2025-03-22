@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import ast
 import random
-import time
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
@@ -148,42 +147,62 @@ else:
 
     # --- 🎰 로또 시스템 --- 
     st.subheader("🎰 세진코인 로또 게임 (1코인 차감)")
+
+    # 로또 시도 시간 확인
+    last_attempt_time = st.session_state.get("last_attempt_time", None)
+    current_time = datetime.now()
+
+    # 10초 제한
+    if last_attempt_time:
+        time_diff = (current_time - last_attempt_time).total_seconds()
+        if time_diff < 10:
+            remaining_time = 10 - int(time_diff)
+            st.warning(f"로또는 {remaining_time}초 후에 다시 시도할 수 있습니다.")
+        else:
+            st.session_state.last_attempt_time = None  # 시간 제한 해제
+
     chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
 
     if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)"):
         if student_coins < 1:
             st.error("세진코인이 부족합니다.")
         else:
-            data.at[student_index, "세진코인"] -= 1
-            pool = list(range(1, 21))
-            main_balls = random.sample(pool, 3)
-            bonus_ball = random.choice([n for n in pool if n not in main_balls])
-            
-            st.write("**컴퓨터 추첨 결과:**")
-            st.write("메인 볼:", sorted(main_balls))
-            st.write("보너스 볼:", bonus_ball)
-            
-            matches = set(chosen_numbers) & set(main_balls)
-            match_count = len(matches)
-            
-            reward = ""
-            if match_count == 3:
-                st.success("🎉 1등 당첨! 상품: 치킨")
-                reward = "치킨"
-            elif match_count == 2 and list(set(chosen_numbers) - matches)[0] == bonus_ball:
-                st.success("🎉 2등 당첨! 상품: 햄버거세트")
-                reward = "햄버거세트"
-            elif match_count == 2:
-                st.success("🎉 3등 당첨! 상품: 매점이용권")
-                reward = "매점이용권"
-            elif match_count == 1:
-                st.success("🎉 4등 당첨! 보상: 0.5코인")
-                reward = "0.5코인"
-                data.at[student_index, "세진코인"] += 0.5
+            # 10초 제한 체크 후 게임 실행
+            if last_attempt_time is None or time_diff >= 10:
+                data.at[student_index, "세진코인"] -= 1
+                pool = list(range(1, 21))
+                main_balls = random.sample(pool, 3)
+                bonus_ball = random.choice([n for n in pool if n not in main_balls])
+                
+                st.write("**컴퓨터 추첨 결과:**")
+                st.write("메인 볼:", sorted(main_balls))
+                st.write("보너스 볼:", bonus_ball)
+                
+                matches = set(chosen_numbers) & set(main_balls)
+                match_count = len(matches)
+                
+                reward = ""
+                if match_count == 3:
+                    st.success("🎉 1등 당첨! 상품: 치킨")
+                    reward = "치킨"
+                elif match_count == 2 and list(set(chosen_numbers) - matches)[0] == bonus_ball:
+                    st.success("🎉 2등 당첨! 상품: 햄버거세트")
+                    reward = "햄버거세트"
+                elif match_count == 2:
+                    st.success("🎉 3등 당첨! 상품: 매점이용권")
+                    reward = "매점이용권"
+                elif match_count == 1:
+                    st.success("🎉 4등 당첨! 보상: 0.5코인")
+                    reward = "0.5코인"
+                    data.at[student_index, "세진코인"] += 0.5
+                else:
+                    st.error("😢 아쉽게도 당첨되지 않았습니다.")
+                
+                record_list = ast.literal_eval(data.at[student_index, "기록"])
+                record_list.append(f"로또 ({reward})")
+                data.at[student_index, "기록"] = str(record_list)
+                save_data(data)  # 변경된 데이터를 Google Sheets에 저장
+                st.session_state.last_attempt_time = current_time  # 현재 시간 기록
             else:
-                st.error("😢 아쉽게도 당첨되지 않았습니다.")
-            
-            record_list = ast.literal_eval(data.at[student_index, "기록"])
-            record_list.append(f"로또 ({reward})")
-            data.at[student_index, "기록"] = str(record_list)
-            save_data(data)  # 변경된 데이터를 Google Sheets에 저장
+                remaining_time = 10 - int(time_diff)
+                st.warning(f"로또는 {remaining_time}초 후에 다시 시도할 수 있습니다.")
