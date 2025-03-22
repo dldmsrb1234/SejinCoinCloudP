@@ -20,8 +20,7 @@ def connect_gsheet():
     sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
     return sheet
 
-# 캐시된 데이터를 로드
-@st.cache_data(ttl=60)  # 1분 동안 데이터 캐싱
+# 데이터 로드
 def load_data():
     sheet = connect_gsheet()
     return pd.DataFrame(sheet.get_all_records())
