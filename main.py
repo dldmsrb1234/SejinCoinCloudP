@@ -132,7 +132,17 @@ else:
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
     student_coins = int(data.at[student_index, "세진코인"])
-    coin_display = f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
+    
+    # 코인 상태에 따라 색상과 이모티콘을 설정
+    if student_coins < 0:
+        coin_display = f'<h2 style="color:red;">{selected_student}님의 세진코인은 {student_coins}개입니다. 😢</h2>'
+    elif student_coins == 0:
+        coin_display = f'<h2 style="color:gray;">{selected_student}님의 세진코인은 {student_coins}개입니다. 😐</h2>'
+    elif student_coins >= 5 and student_coins < 10:
+        coin_display = f'<h2 style="color:green;">{selected_student}님의 세진코인은 {student_coins}개입니다. 😊</h2>'
+    else:
+        coin_display = f'<h2 style="color:yellow;">{selected_student}님의 세진코인은 {student_coins}개입니다. 🎉</h2>'
+    
     st.markdown(coin_display, unsafe_allow_html=True)
 
     # --- 🎰 로또 시스템 --- 
@@ -176,4 +186,3 @@ else:
             record_list.append(f"로또 ({reward})")
             data.at[student_index, "기록"] = str(record_list)
             save_data(data)
-
