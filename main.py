@@ -145,7 +145,7 @@ else:
     student_coins = int(data.at[student_index, "세진코인"])
     
     # 코인 개수 출력
-    if student_coins < 1:
+    if student_coins > 0:
         coin_display = f"<h2 style='color: gray;'>😐 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
     elif student_coins >= 5 and student_coins < 10:
         coin_display = f"<h2 style='color: green;'>😊 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
