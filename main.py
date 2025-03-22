@@ -134,16 +134,18 @@ else:
     student_coins = int(data.at[student_index, "세진코인"])
     
     # 코인 상태에 따라 색상과 이모티콘을 설정
-    if student_coins < 0:
-        coin_display = f'<h2 style="color:red;">{selected_student}님의 세진코인은 {student_coins}개입니다. 😢</h2>'
-    elif student_coins == 0:
-        coin_display = f'<h2 style="color:gray;">{selected_student}님의 세진코인은 {student_coins}개입니다. 😐</h2>'
-    elif student_coins >= 5 and student_coins < 10:
-        coin_display = f'<h2 style="color:green;">{selected_student}님의 세진코인은 {student_coins}개입니다. 😊</h2>'
-    else:
-        coin_display = f'<h2 style="color:yellow;">{selected_student}님의 세진코인은 {student_coins}개입니다. 🎉</h2>'
-    
-    st.markdown(coin_display, unsafe_allow_html=True)
+    def get_coin_display(coins):
+        if coins < 0:
+            return f'<h2 style="color:red;">{selected_student}님의 세진코인은 {coins}개입니다. 😢</h2>'
+        elif coins == 0:
+            return f'<h2 style="color:gray;">{selected_student}님의 세진코인은 {coins}개입니다. 😐</h2>'
+        elif coins >= 5 and coins < 10:
+            return f'<h2 style="color:green;">{selected_student}님의 세진코인은 {coins}개입니다. 😊</h2>'
+        else:
+            return f'<h2 style="color:yellow;">{selected_student}님의 세진코인은 {coins}개입니다. 🎉</h2>'
+
+    # 세진코인 상태 표시
+    st.markdown(get_coin_display(student_coins), unsafe_allow_html=True)
 
     # --- 🎰 로또 시스템 --- 
     st.subheader("🎰 세진코인 로또 게임 (1코인 차감)")
@@ -154,6 +156,8 @@ else:
             st.error("세진코인이 부족합니다.")
         else:
             data.at[student_index, "세진코인"] -= 1
+            student_coins -= 1  # 코인 차감 후 실시간으로 업데이트
+
             pool = list(range(1, 21))
             main_balls = random.sample(pool, 3)
             bonus_ball = random.choice([n for n in pool if n not in main_balls])
@@ -179,10 +183,16 @@ else:
                 st.success("🎉 4등 당첨! 보상: 0.5코인")
                 reward = "0.5코인"
                 data.at[student_index, "세진코인"] += 0.5
+                student_coins += 0.5  # 보상 후 실시간 코인 업데이트
             else:
                 st.error("😢 아쉽게도 당첨되지 않았습니다.")
             
+            # 세진코인 상태 다시 업데이트
             record_list = ast.literal_eval(data.at[student_index, "기록"])
             record_list.append(f"로또 ({reward})")
             data.at[student_index, "기록"] = str(record_list)
             save_data(data)
+
+            # 실시간으로 세진코인 상태 표시
+            st.markdown(get_coin_display(student_coins), unsafe_allow_html=True)
+
