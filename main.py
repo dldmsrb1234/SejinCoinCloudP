@@ -69,7 +69,7 @@ if user_type == "교사용":
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
     password = st.text_input("관리자 비밀번호를 입력하세요:", type="password")
-    if password == st.secrets["general"]["admin_password"]
+    if password == st.secrets["general"]["admin_password"]:
         coin_amount = st.number_input("부여 또는 회수할 코인 수:", min_value=-100, max_value=100, value=1)
 
         if st.button("세진코인 변경하기"):
