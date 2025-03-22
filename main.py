@@ -14,7 +14,10 @@ def connect_gsheet():
         scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     )
     client = gspread.authorize(creds)
-    sheet = client.open("세진코인관리").sheet1  # 실제 Google Sheet 문서 이름으로 변경
+    
+    # 👉 Google Sheets URL 사용
+    sheet_url = st.secrets["SPREADSHEET_URL"]  # secrets.toml 파일에서 불러오기
+    sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
     return sheet
 
 # Google Sheets 데이터 로드 및 저장
@@ -105,17 +108,7 @@ else:
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
     student_coins = int(data.at[student_index, "세진코인"])
-    if student_coins < 0:
-        coin_display = f"<h2 style='color:red;'>😢 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
-    elif student_coins == 0:
-        coin_display = f"<h2 style='color:gray;'>😐 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
-    elif student_coins >= 10:
-        coin_display = f"<h2 style='color:yellow;'>🎉 {selected_student}님의 세진코인은 {student_coins}개입니다!</h2>"
-    elif student_coins >= 5:
-        coin_display = f"<h2 style='color:green;'>😊 {selected_student}님의 세진코인은 {student_coins}개입니다!</h2>"
-    else:
-        coin_display = f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
-
+    coin_display = f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
     st.markdown(coin_display, unsafe_allow_html=True)
 
     # --- 🎰 로또 시스템 ---
@@ -127,19 +120,18 @@ else:
             st.error("세진코인이 부족합니다.")
         else:
             data.at[student_index, "세진코인"] -= 1
-
             pool = list(range(1, 21))
             main_balls = random.sample(pool, 3)
-            remaining = [n for n in pool if n not in main_balls]
-            bonus_ball = random.choice(remaining)
-
+            bonus_ball = random.choice([n for n in pool if n not in main_balls])
+            
             st.write("**컴퓨터 추첨 결과:**")
             st.write("메인 볼:", sorted(main_balls))
             st.write("보너스 볼:", bonus_ball)
-
+            
             matches = set(chosen_numbers) & set(main_balls)
             match_count = len(matches)
-
+            
+            reward = ""
             if match_count == 3:
                 st.success("🎉 1등 당첨! 상품: 치킨")
                 reward = "치킨"
@@ -155,13 +147,8 @@ else:
                 data.at[student_index, "세진코인"] += 0.5
             else:
                 st.error("😢 아쉽게도 당첨되지 않았습니다.")
-                reward = ""
-
-            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
             record_list = ast.literal_eval(data.at[student_index, "기록"])
             record_list.append(f"로또 ({reward})")
             data.at[student_index, "기록"] = str(record_list)
             save_data(data)
-
-            st.write(f"현재 잔액: {data.at[student_index, '세진코인']} 세진코인")
-
