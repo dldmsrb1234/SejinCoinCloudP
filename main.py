@@ -140,49 +140,58 @@ if user_type == "학생용":
     # 학생 비밀번호 입력 받기
     password = st.text_input("비밀번호를 입력하세요:", type="password")
 
+    # 로또 게임과 관련된 변수들
     if password == str(data.at[student_index, "비밀번호"]):
         # --- 🎰 로또 시스템 --- 
         st.subheader("🎰 세진코인 로또 게임 (1코인 차감)")
 
         chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
 
-        if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)"):
+        # 로또 버튼이 활성화되었을 때만 게임을 진행하도록
+        if 'last_play_time' not in st.session_state or time.time() - st.session_state.last_play_time > 5:
+            if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)"):
 
-            if student_coins < 1:
-                st.error("세진코인이 부족합니다.")
-            else:
-                data.at[student_index, "세진코인"] -= 1
-                pool = list(range(1, 21))
-                main_balls = random.sample(pool, 3)
-                bonus_ball = random.choice([n for n in pool if n not in main_balls])
-                
-                st.write("**컴퓨터 추첨 결과:**")
-                st.write("메인 볼:", sorted(main_balls))
-                st.write("보너스 볼:", bonus_ball)
-                
-                matches = set(chosen_numbers) & set(main_balls)
-                match_count = len(matches)
-                
-                reward = ""
-                if match_count == 3:
-                    st.success("🎉 1등 당첨! 상품: 치킨")
-                    reward = "치킨"
-                elif match_count == 2 and list(set(chosen_numbers) - matches)[0] == bonus_ball:
-                    st.success("🎉 2등 당첨! 상품: 햄버거세트")
-                    reward = "햄버거세트"
-                elif match_count == 2:
-                    st.success("🎉 3등 당첨! 상품: 매점이용권")
-                    reward = "매점이용권"
-                elif match_count == 1:
-                    st.success("🎉 4등 당첨! 보상: 0.5코인")
-                    reward = "0.5코인"
-                    data.at[student_index, "세진코인"] += 0.5
+                if student_coins < 1:
+                    st.error("세진코인이 부족합니다.")
                 else:
-                    st.error("😢 아쉽게도 당첨되지 않았습니다.")
-                
-                add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
-                save_data(data)
+                    data.at[student_index, "세진코인"] -= 1
+                    pool = list(range(1, 21))
+                    main_balls = random.sample(pool, 3)
+                    bonus_ball = random.choice([n for n in pool if n not in main_balls])
 
+                    st.write("**컴퓨터 추첨 결과:**")
+                    st.write("메인 볼:", sorted(main_balls))
+                    st.write("보너스 볼:", bonus_ball)
+
+                    matches = set(chosen_numbers) & set(main_balls)
+                    match_count = len(matches)
+
+                    reward = ""
+                    if match_count == 3:
+                        st.success("🎉 1등 당첨! 상품: 치킨")
+                        reward = "치킨"
+                    elif match_count == 2 and list(set(chosen_numbers) - matches)[0] == bonus_ball:
+                        st.success("🎉 2등 당첨! 상품: 햄버거세트")
+                        reward = "햄버거세트"
+                    elif match_count == 2:
+                        st.success("🎉 3등 당첨! 상품: 매점이용권")
+                        reward = "매점이용권"
+                    elif match_count == 1:
+                        st.success("🎉 4등 당첨! 보상: 0.5코인")
+                        reward = "0.5코인"
+                        data.at[student_index, "세진코인"] += 0.5
+                    else:
+                        st.error("😢 아쉽게도 당첨되지 않았습니다.")
+
+                    add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
+                    save_data(data)
+                    
+                    # 5초 동안 버튼 비활성화
+                    st.session_state.last_play_time = time.time()
+
+        else:
+            st.warning("로또 게임을 진행한 후 5초가 지나야 다시 시도할 수 있습니다.")
+        
         # 학생 본인의 기록 보기
         st.subheader(f"{selected_student}님의 활동 기록")
         record_list = ast.literal_eval(data.at[student_index, "기록"])
