@@ -121,6 +121,14 @@ if user_type == "교사용":
                 else:
                     st.warning(f"{selected_student}에게서 세진코인 {-coin_amount}개를 회수했습니다!")
 
+        # 세진코인 초기화 버튼
+        if st.button("⚠️ 세진코인 초기화"):
+            data.at[student_index, "세진코인"] = 0
+            data.at[student_index, "기록"] = "[]"
+            add_record(student_index, "세진코인 초기화", reward=None, additional_info="세진코인 및 기록 초기화")
+            save_data(data)  # 초기화된 데이터를 Google Sheets에 저장
+            st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
+        
         updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])  # 비밀번호 제외
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
