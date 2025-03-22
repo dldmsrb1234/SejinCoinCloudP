@@ -16,7 +16,7 @@ def connect_gsheet():
     client = gspread.authorize(creds)
     
     # 👉 Google Sheets URL 사용
-    sheet_url = st.secrets["SPREADSHEET_URL"]  # secrets.toml 파일에서 불러오기
+    sheet_url = st.secrets["https://docs.google.com/spreadsheets/d/1wjciGq95qos6h1dBwUvMB56QhRRj-GZq3DS_btspsfE/edit?gid=1589455850#gid=1589455850/edit"]  # secrets.toml 파일에서 불러오기
     sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
     return sheet
 
