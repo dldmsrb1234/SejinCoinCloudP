@@ -130,9 +130,9 @@ else:
     selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
-    # 학생 비밀번호 검증
+    # 학생 비밀번호 검증 (5열에 비밀번호 저장)
     student_password = st.text_input("비밀번호를 입력하세요:", type="password")
-    correct_password = data.at[student_index, "비밀번호"]
+    correct_password = data.iloc[student_index, 4]  # 비밀번호는 5열에 저장됨
 
     if student_password == correct_password:
         student_coins = int(data.at[student_index, "세진코인"])
