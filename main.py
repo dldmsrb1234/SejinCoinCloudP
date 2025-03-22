@@ -114,7 +114,7 @@ if user_type == "교사용":
             save_data(data)  # 초기화된 데이터를 Google Sheets에 저장
             st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
 
-        updated_student_data = data.loc[[student_index]]
+        updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])  # 비밀번호 제외
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
 
