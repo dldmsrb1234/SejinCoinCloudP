@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import ast
 import random
+import time
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
@@ -19,7 +20,8 @@ def connect_gsheet():
     sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
     return sheet
 
-# Google Sheets 데이터 로드 및 저장
+# 캐시된 데이터를 로드
+@st.cache_data(ttl=60)  # 1분 동안 데이터 캐싱
 def load_data():
     sheet = connect_gsheet()
     return pd.DataFrame(sheet.get_all_records())
@@ -131,16 +133,17 @@ else:
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
     student_coins = int(data.at[student_index, "세진코인"])
+    coin_display = f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
 
-    # 세진코인 상태에 따라 텍스트와 색상 변경
+    # 세진코인 상태에 따른 텍스트 스타일 변경
     if student_coins < 0:
         coin_display = f"<h2 style='color: red;'>😢 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
     elif student_coins == 0:
         coin_display = f"<h2 style='color: gray;'>😐 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
+    elif student_coins >= 5 and student_coins < 10:
+        coin_display = f"<h2 style='color: green;'>😊 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
     elif student_coins >= 10:
         coin_display = f"<h2 style='color: yellow;'>🎉 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
-    elif student_coins >= 5:
-        coin_display = f"<h2 style='color: green;'>😊 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
 
     st.markdown(coin_display, unsafe_allow_html=True)
 
@@ -177,7 +180,7 @@ else:
             elif match_count == 1:
                 st.success("🎉 4등 당첨! 보상: 0.5코인")
                 reward = "0.5코인"
-                data.at[student_index, "세진코인"] += 0.5  # 4등 당첨 시 0.5코인 추가
+                data.at[student_index, "세진코인"] += 0.5
             else:
                 st.error("😢 아쉽게도 당첨되지 않았습니다.")
             
