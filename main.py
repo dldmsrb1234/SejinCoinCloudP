@@ -30,17 +30,32 @@ def save_data(data):
     sheet.clear()
     sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
-# --- 🌟 UI 스타일 ---
+# --- 🌟 UI 스타일 --- 
 st.markdown(
     """
     <style>
+    /* 배경화면 및 GIF 설정 */
     .stApp {
-        background-color: #121212 !important;
+        background: url('https://global-assets.benzinga.com/kr/2025/02/16222019/1739712018-Cryptocurrency-Photo-by-SvetlanaParnikov.jpeg') repeat !important;
+        background-size: 150px 150px !important;
     }
+
+    /* 헤더 비트코인 GIF 추가 */
+    .header-img {
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* 텍스트 색상 및 폰트 설정 */
     html, body, [class*="css"] {
         color: #ffffff;
         font-family: 'Orbitron', sans-serif;
     }
+
+    /* 버튼 스타일링 */
     .stButton>button {
          background-color: #808080 !important;
          color: #fff;
@@ -52,12 +67,21 @@ st.markdown(
          transition: transform 0.2s ease-in-out;
          box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
     }
+
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# --- 🌟 학생/교사 선택 ---
+# 헤더 비트코인 GIF 이미지
+st.markdown(
+    '<div style="text-align:center;">'
+    '<img class="header-img" src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemVldTNsMGVpMjZzdjhzc3hnbzl0d2szYjNoNXY2ZGt4ZXVtNncyciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/30VBSGB7QW1RJpNcHO/giphy.gif" alt="Bitcoin GIF">'
+    '</div>',
+    unsafe_allow_html=True
+)
+
+# --- 🌟 학생/교사 선택 --- 
 user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용"])
 
 # --- 🎓 교사용 UI ---
@@ -99,7 +123,7 @@ if user_type == "교사용":
         st.subheader("전체 학생 세진코인 현황")
         st.dataframe(data)
 
-# --- 🎒 학생용 UI ---
+# --- 🎒 학생용 UI --- 
 else:
     data = load_data()
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
@@ -111,7 +135,7 @@ else:
     coin_display = f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
     st.markdown(coin_display, unsafe_allow_html=True)
 
-    # --- 🎰 로또 시스템 ---
+    # --- 🎰 로또 시스템 --- 
     st.subheader("🎰 세진코인 로또 게임 (1코인 차감)")
     chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
 
@@ -152,3 +176,4 @@ else:
             record_list.append(f"로또 ({reward})")
             data.at[student_index, "기록"] = str(record_list)
             save_data(data)
+
