@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import ast
 import random
-import time
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
