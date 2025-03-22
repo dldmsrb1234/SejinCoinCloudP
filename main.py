@@ -158,6 +158,9 @@ else:
             data.at[student_index, "세진코인"] -= 1
             student_coins -= 1  # 코인 차감 후 실시간으로 업데이트
 
+            # 세진코인 상태 다시 업데이트
+            st.markdown(get_coin_display(student_coins), unsafe_allow_html=True)
+            
             pool = list(range(1, 21))
             main_balls = random.sample(pool, 3)
             bonus_ball = random.choice([n for n in pool if n not in main_balls])
@@ -193,5 +196,5 @@ else:
             data.at[student_index, "기록"] = str(record_list)
             save_data(data)
 
-            # 실시간으로 세진코인 상태 표시
+            # 다시 세진코인 상태 표시
             st.markdown(get_coin_display(student_coins), unsafe_allow_html=True)
