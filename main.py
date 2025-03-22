@@ -149,7 +149,8 @@ else:
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
     student_coins = int(data.at[student_index, "세진코인"])
-    # 세진코인 표시
+
+    # 세진코인 상태에 따라 텍스트와 색상 변경
     if student_coins < 0:
         coin_display = f"<h2 style='color: red;'>😢 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
     elif student_coins == 0:
@@ -170,7 +171,6 @@ else:
             st.error("세진코인이 부족합니다.")
         else:
             data.at[student_index, "세진코인"] -= 1
-            student_coins -= 1  # 세진코인 업데이트
             pool = list(range(1, 21))
             main_balls = random.sample(pool, 3)
             bonus_ball = random.choice([n for n in pool if n not in main_balls])
@@ -195,13 +195,11 @@ else:
             elif match_count == 1:
                 st.success("🎉 4등 당첨! 보상: 0.5코인")
                 reward = "0.5코인"
-                data.at[student_index, "세진코인"] += 0.5
-                student_coins += 0.5  # 학생 코인 업데이트
+                data.at[student_index, "세진코인"] += 0.5  # 4등 당첨 시 0.5코인 추가
             else:
                 st.error("😢 아쉽게도 당첨되지 않았습니다.")
             
             record_list = ast.literal_eval(data.at[student_index, "기록"])
             record_list.append(f"로또 ({reward})")
             data.at[student_index, "기록"] = str(record_list)
-            save_data(data)  # 데이터 저장
-
+            save_data(data)
