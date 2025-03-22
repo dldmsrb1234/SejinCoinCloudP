@@ -204,5 +204,5 @@ else:
                 save_data(data)  # 변경된 데이터를 Google Sheets에 저장
                 st.session_state.last_attempt_time = current_time  # 현재 시간 기록
             else:
-                remaining_time = 10 - int(time_diff)
+                remaining_time = 5 - int(time_diff)
                 st.warning(f"로또는 {remaining_time}초 후에 다시 시도할 수 있습니다.")
