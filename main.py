@@ -28,8 +28,8 @@ def load_data():
 
 def save_data(data):
     sheet = connect_gsheet()
-    sheet.clear()
-    sheet.update([data.columns.values.tolist()] + data.values.tolist())
+    sheet.clear()  # 기존 시트 내용을 삭제
+    sheet.update([data.columns.values.tolist()] + data.values.tolist())  # 새로운 데이터를 시트에 업데이트
 
 # --- 🌟 UI 스타일 --- 
 st.markdown(
@@ -103,7 +103,7 @@ if user_type == "교사용":
                 record_list = ast.literal_eval(data.at[student_index, "기록"])
                 record_list.append(coin_amount)
                 data.at[student_index, "기록"] = str(record_list)
-                save_data(data)
+                save_data(data)  # 변경된 데이터를 Google Sheets에 저장
 
                 if coin_amount > 0:
                     st.success(f"{selected_student}에게 세진코인 {coin_amount}개를 부여했습니다!")
@@ -113,7 +113,7 @@ if user_type == "교사용":
         if st.button("⚠️ 세진코인 초기화"):
             data.at[student_index, "세진코인"] = 0
             data.at[student_index, "기록"] = "[]"
-            save_data(data)
+            save_data(data)  # 초기화된 데이터를 Google Sheets에 저장
             st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
 
         updated_student_data = data.loc[[student_index]]
@@ -187,4 +187,4 @@ else:
             record_list = ast.literal_eval(data.at[student_index, "기록"])
             record_list.append(f"로또 ({reward})")
             data.at[student_index, "기록"] = str(record_list)
-            save_data(data)
+            save_data(data)  # 변경된 데이터를 Google Sheets에 저장
