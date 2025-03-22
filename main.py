@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import ast
 import random
-import time
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
@@ -104,7 +103,7 @@ if user_type == "교사용":
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
     password = st.text_input("관리자 비밀번호를 입력하세요:", type="password")
-    if password == st.secrets["general"]["admin_password"]:
+    if password == st.secrets["general"]["admin_password"]:  # 비밀번호 확인
         coin_amount = st.number_input("부여 또는 회수할 코인 수:", min_value=-100, max_value=100, value=1)
 
         if st.button("세진코인 변경하기"):
@@ -130,6 +129,9 @@ if user_type == "교사용":
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
 
+    else:
+        st.warning("비밀번호가 틀렸습니다!")
+
     if st.checkbox("전체 학생 세진코인 현황 보기"):
         st.subheader("전체 학생 세진코인 현황")
         st.dataframe(data)
@@ -145,7 +147,7 @@ else:
     student_coins = int(data.at[student_index, "세진코인"])
     
     # 코인 개수 출력
-    if student_coins > 0:
+    if student_coins < 1:
         coin_display = f"<h2 style='color: gray;'>😐 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
     elif student_coins >= 5 and student_coins < 10:
         coin_display = f"<h2 style='color: green;'>😊 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
