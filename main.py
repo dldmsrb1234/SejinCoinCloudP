@@ -132,8 +132,8 @@ else:
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
     student_coins = int(data.at[student_index, "세진코인"])
-    
-    # 코인 상태에 따라 색상과 이모티콘을 설정
+
+    # 세진코인 상태 표시 함수
     def get_coin_display(coins):
         if coins < 0:
             return f'<h2 style="color:red;">{selected_student}님의 세진코인은 {coins}개입니다. 😢</h2>'
@@ -195,4 +195,3 @@ else:
 
             # 실시간으로 세진코인 상태 표시
             st.markdown(get_coin_display(student_coins), unsafe_allow_html=True)
-
