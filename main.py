@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 import ast
+from datetime import datetime
 import random
 import time
-from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
@@ -29,6 +29,20 @@ def save_data(data):
     sheet = connect_gsheet()
     sheet.clear()
     sheet.update([data.columns.values.tolist()] + data.values.tolist())
+
+# 기록을 추가하는 함수
+def add_record(student_index, activity, reward=None, additional_info=None):
+    record_list = ast.literal_eval(data.at[student_index, "기록"])
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    new_record = {
+        "timestamp": timestamp,
+        "activity": activity,
+        "reward": reward,
+        "additional_info": additional_info
+    }
+    record_list.append(new_record)
+    data.at[student_index, "기록"] = str(record_list)
+    save_data(data)
 
 # --- 🌟 UI 스타일 --- 
 st.markdown(
@@ -83,7 +97,8 @@ st.markdown(
 
 # --- 🎓 교사용 UI --- 
 user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용"])
-#교사용 UI
+
+# 교사용 UI
 if user_type == "교사용":
     data = load_data()
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
@@ -98,9 +113,7 @@ if user_type == "교사용":
         if st.button("세진코인 변경하기"):
             if coin_amount != 0:
                 data.at[student_index, "세진코인"] += coin_amount
-                record_list = ast.literal_eval(data.at[student_index, "기록"])
-                record_list.append(coin_amount)
-                data.at[student_index, "기록"] = str(record_list)
+                add_record(student_index, "세진코인 변경", reward=None, additional_info=f"변경된 코인: {coin_amount}")
                 save_data(data)  # 변경된 데이터를 Google Sheets에 저장
 
                 if coin_amount > 0:
@@ -108,22 +121,9 @@ if user_type == "교사용":
                 else:
                     st.warning(f"{selected_student}에게서 세진코인 {-coin_amount}개를 회수했습니다!")
 
-        if st.button("⚠️ 세진코인 초기화"):
-            data.at[student_index, "세진코인"] = 0
-            data.at[student_index, "기록"] = "[]"
-            save_data(data)  # 초기화된 데이터를 Google Sheets에 저장
-            st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
-
         updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])  # 비밀번호 제외
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
-
-    if st.checkbox("전체 학생 세진코인 현황 보기"):
-        st.subheader("전체 학생 세진코인 현황")
-        # 비밀번호 열 제외하고 데이터 출력
-        data_without_password = data.drop(columns=["비밀번호"])  # '비밀번호' 열을 제외
-        st.dataframe(data_without_password)
-    
 
 # --- 🎒 학생용 UI --- 
 if user_type == "학생용":
@@ -147,6 +147,7 @@ if user_type == "학생용":
         chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
 
         if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)"):
+
             if student_coins < 1:
                 st.error("세진코인이 부족합니다.")
             else:
@@ -179,9 +180,17 @@ if user_type == "학생용":
                 else:
                     st.error("😢 아쉽게도 당첨되지 않았습니다.")
                 
-                record_list = ast.literal_eval(data.at[student_index, "기록"])
-                record_list.append(f"로또 ({reward})")
-                data.at[student_index, "기록"] = str(record_list)
+                add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
                 save_data(data)
+
+        # 학생 본인의 기록 보기
+        st.subheader(f"{selected_student}님의 활동 기록")
+        record_list = ast.literal_eval(data.at[student_index, "기록"])
+        for record in record_list:
+            st.write(f"**{record['timestamp']}** - {record['activity']}")
+            if record['reward']:
+                st.write(f"  보상: {record['reward']}")
+            if record['additional_info']:
+                st.write(f"  추가 정보: {record['additional_info']}")
     else:
         st.error("비밀번호가 틀렸습니다. 다시 시도해주세요.")
