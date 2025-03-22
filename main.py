@@ -1,3 +1,5 @@
+import time
+from googleapiclient.errors import HttpError
 import streamlit as st
 import pandas as pd
 import ast
@@ -21,13 +23,29 @@ def connect_gsheet():
 
 # Google Sheets 데이터 로드 및 저장
 def load_data():
-    sheet = connect_gsheet()
-    return pd.DataFrame(sheet.get_all_records())
+    try:
+        sheet = connect_gsheet()
+        return pd.DataFrame(sheet.get_all_records())
+    except HttpError as err:
+        if err.resp.status == 429:  # 쿼터 초과 오류 확인
+            st.error("쿼터 초과! 잠시 후 다시 시도해주세요.")
+            time.sleep(60)  # 1분 대기 후 재시도
+            return load_data()  # 재시도
+        else:
+            raise  # 다른 오류는 다시 발생시키기
 
 def save_data(data):
-    sheet = connect_gsheet()
-    sheet.clear()
-    sheet.update([data.columns.values.tolist()] + data.values.tolist())
+    try:
+        sheet = connect_gsheet()
+        sheet.clear()
+        sheet.update([data.columns.values.tolist()] + data.values.tolist())
+    except HttpError as err:
+        if err.resp.status == 429:  # 쿼터 초과 오류 확인
+            st.error("쿼터 초과! 잠시 후 다시 시도해주세요.")
+            time.sleep(60)  # 1분 대기 후 재시도
+            save_data(data)  # 재시도
+        else:
+            raise  # 다른 오류는 다시 발생시키기
 
 # --- 🌟 UI 스타일 --- 
 st.markdown(
@@ -83,7 +101,7 @@ st.markdown(
 # --- 🌟 학생/교사 선택 --- 
 user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용"])
 
-# --- 🎓 교사용 UI ---
+# --- 🎓 교사용 UI --- 
 if user_type == "교사용":
     data = load_data()
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
@@ -131,22 +149,19 @@ else:
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
     student_coins = int(data.at[student_index, "세진코인"])
+    # 세진코인 표시
+    if student_coins < 0:
+        coin_display = f"<h2 style='color: red;'>😢 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
+    elif student_coins == 0:
+        coin_display = f"<h2 style='color: gray;'>😐 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
+    elif student_coins >= 10:
+        coin_display = f"<h2 style='color: yellow;'>🎉 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
+    elif student_coins >= 5:
+        coin_display = f"<h2 style='color: green;'>😊 {selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
 
-    # 세진코인 상태 표시 함수
-    def get_coin_display(coins):
-        if coins < 0:
-            return f'<h2 style="color:red;">{selected_student}님의 세진코인은 {coins}개입니다. 😢</h2>'
-        elif coins == 0:
-            return f'<h2 style="color:gray;">{selected_student}님의 세진코인은 {coins}개입니다. 😐</h2>'
-        elif coins >= 5 and coins < 10:
-            return f'<h2 style="color:green;">{selected_student}님의 세진코인은 {coins}개입니다. 😊</h2>'
-        else:
-            return f'<h2 style="color:yellow;">{selected_student}님의 세진코인은 {coins}개입니다. 🎉</h2>'
+    st.markdown(coin_display, unsafe_allow_html=True)
 
-    # 세진코인 상태 표시
-    st.markdown(get_coin_display(student_coins), unsafe_allow_html=True)
-
-    # --- 로또 UI (따로 분리됨) ---
+    # --- 🎰 로또 시스템 --- 
     st.subheader("🎰 세진코인 로또 게임 (1코인 차감)")
     chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
 
@@ -154,12 +169,8 @@ else:
         if student_coins < 1:
             st.error("세진코인이 부족합니다.")
         else:
-            # 코인 차감 후 상태 갱신
             data.at[student_index, "세진코인"] -= 1
-            student_coins -= 1
-            save_data(data)
-
-            # 로또 결과
+            student_coins -= 1  # 세진코인 업데이트
             pool = list(range(1, 21))
             main_balls = random.sample(pool, 3)
             bonus_ball = random.choice([n for n in pool if n not in main_balls])
@@ -185,15 +196,12 @@ else:
                 st.success("🎉 4등 당첨! 보상: 0.5코인")
                 reward = "0.5코인"
                 data.at[student_index, "세진코인"] += 0.5
-                student_coins += 0.5  # 보상 후 실시간 코인 업데이트
+                student_coins += 0.5  # 학생 코인 업데이트
             else:
                 st.error("😢 아쉽게도 당첨되지 않았습니다.")
             
-            # 로또 기록 추가
             record_list = ast.literal_eval(data.at[student_index, "기록"])
             record_list.append(f"로또 ({reward})")
             data.at[student_index, "기록"] = str(record_list)
-            save_data(data)
+            save_data(data)  # 데이터 저장
 
-            # 로또 결과 후 코인 상태 업데이트
-            st.markdown(get_coin_display(student_coins), unsafe_allow_html=True)
