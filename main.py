@@ -1,9 +1,8 @@
-import time
-from googleapiclient.errors import HttpError
 import streamlit as st
 import pandas as pd
 import ast
 import random
+import time
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
@@ -23,29 +22,13 @@ def connect_gsheet():
 
 # Google Sheets 데이터 로드 및 저장
 def load_data():
-    try:
-        sheet = connect_gsheet()
-        return pd.DataFrame(sheet.get_all_records())
-    except HttpError as err:
-        if err.resp.status == 429:  # 쿼터 초과 오류 확인
-            st.error("쿼터 초과! 잠시 후 다시 시도해주세요.")
-            time.sleep(60)  # 1분 대기 후 재시도
-            return load_data()  # 재시도
-        else:
-            raise  # 다른 오류는 다시 발생시키기
+    sheet = connect_gsheet()
+    return pd.DataFrame(sheet.get_all_records())
 
 def save_data(data):
-    try:
-        sheet = connect_gsheet()
-        sheet.clear()
-        sheet.update([data.columns.values.tolist()] + data.values.tolist())
-    except HttpError as err:
-        if err.resp.status == 429:  # 쿼터 초과 오류 확인
-            st.error("쿼터 초과! 잠시 후 다시 시도해주세요.")
-            time.sleep(60)  # 1분 대기 후 재시도
-            save_data(data)  # 재시도
-        else:
-            raise  # 다른 오류는 다시 발생시키기
+    sheet = connect_gsheet()
+    sheet.clear()
+    sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
 # --- 🌟 UI 스타일 --- 
 st.markdown(
