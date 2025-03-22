@@ -83,8 +83,47 @@ st.markdown(
 # --- 🌟 학생/교사 선택 --- 
 user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용"])
 
+# --- 🎓 교사용 UI ---
+if user_type == "교사용":
+    data = load_data()
+    selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
+    filtered_data = data[data["반"] == selected_class]
+    selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
+    student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
+
+    password = st.text_input("관리자 비밀번호를 입력하세요:", type="password")
+    if password == st.secrets["general"]["admin_password"]:
+        coin_amount = st.number_input("부여 또는 회수할 코인 수:", min_value=-100, max_value=100, value=1)
+
+        if st.button("세진코인 변경하기"):
+            if coin_amount != 0:
+                data.at[student_index, "세진코인"] += coin_amount
+                record_list = ast.literal_eval(data.at[student_index, "기록"])
+                record_list.append(coin_amount)
+                data.at[student_index, "기록"] = str(record_list)
+                save_data(data)
+
+                if coin_amount > 0:
+                    st.success(f"{selected_student}에게 세진코인 {coin_amount}개를 부여했습니다!")
+                else:
+                    st.warning(f"{selected_student}에게서 세진코인 {-coin_amount}개를 회수했습니다!")
+
+        if st.button("⚠️ 세진코인 초기화"):
+            data.at[student_index, "세진코인"] = 0
+            data.at[student_index, "기록"] = "[]"
+            save_data(data)
+            st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
+
+        updated_student_data = data.loc[[student_index]]
+        st.subheader(f"{selected_student}의 업데이트된 세진코인")
+        st.dataframe(updated_student_data)
+
+    if st.checkbox("전체 학생 세진코인 현황 보기"):
+        st.subheader("전체 학생 세진코인 현황")
+        st.dataframe(data)
+
 # --- 🎒 학생용 UI --- 
-if user_type == "학생용":
+else:
     data = load_data()
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
     filtered_data = data[data["반"] == selected_class]
