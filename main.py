@@ -119,8 +119,11 @@ if user_type == "교사용":
         st.dataframe(updated_student_data)
 
     if st.checkbox("전체 학생 세진코인 현황 보기"):
-        st.subheader("전체 학생 세진코인 현황")
-        st.dataframe(data)
+    st.subheader("전체 학생 세진코인 현황")
+    # 비밀번호 열 제외하고 데이터 출력
+    data_without_password = data.drop(columns=["비밀번호"])  # '비밀번호' 열을 제외
+    st.dataframe(data_without_password)
+
 
 # --- 🎒 학생용 UI --- 
 if user_type == "학생용":
