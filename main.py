@@ -38,6 +38,11 @@ def add_record(student_index, activity, reward=None, additional_info=None):
     record_list.append(new_record)
     data.at[student_index, "기록"] = str(record_list)
 
+# 데이터 저장 함수 (구현 필요)
+def save_data(data):
+    sheet = connect_gsheet()
+    sheet.update([data.columns.values.tolist()] + data.values.tolist())
+
 # --- 🌟 UI 스타일 --- 
 st.markdown(
     """
@@ -152,7 +157,6 @@ if user_type == "학생용":
         # 로또 버튼이 활성화되었을 때만 게임을 진행하도록
         if 'last_play_time' not in st.session_state or time.time() - st.session_state.last_play_time > 5:
             if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)"):
-
                 if student_coins < 1:
                     st.error("세진코인이 부족합니다.")
                 else:
@@ -190,13 +194,27 @@ if user_type == "학생용":
                     
                     # 5초 동안 버튼 비활성화
                     st.session_state.last_play_time = time.time()
-
         else:
             st.warning("로또 게임을 진행한 후 5초가 지나야 다시 시도할 수 있습니다.")
         
-        # 학생 본인의 기록 보기
-        st.subheader(f"{selected_student}님의 활동 기록")
+        # --- 최근 당첨 기록 탭 ---
+        st.subheader(f"{selected_student}님의 최근 당첨 기록")
         record_list = ast.literal_eval(data.at[student_index, "기록"])
+        
+        # "로또" 활동만 필터링
+        lotto_records = [record for record in record_list if record["activity"] == "로또"]
+        
+        if lotto_records:
+            for record in lotto_records:
+                st.write(f"**{record['timestamp']}**")
+                st.write(f"당첨 번호: {record['additional_info']}")
+                st.write(f"보상: {record['reward']}")
+                st.write("---")
+        else:
+            st.info("아직 당첨 기록이 없습니다. 로또 게임에 도전해보세요!")
+        
+        # 학생 본인의 전체 활동 기록 보기
+        st.subheader(f"{selected_student}님의 전체 활동 기록")
         for record in record_list:
             st.write(f"**{record['timestamp']}** - {record['activity']}")
             if record['reward']:
