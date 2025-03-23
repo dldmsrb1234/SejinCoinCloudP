@@ -1,91 +1,168 @@
 import streamlit as st
 import pandas as pd
+import ast
+from datetime import datetime
 import random
 import time
+import gspread
+from google.oauth2.service_account import Credentials
 
-# Google Sheets 데이터 불러오기
-@st.cache_data
+# --- Google Sheets API 연결 ---
+def connect_gsheet():
+    creds = Credentials.from_service_account_info(
+        st.secrets["Drive"],
+        scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    )
+    client = gspread.authorize(creds)
+    
+    # 👉 Google Sheets URL 사용
+    sheet_url = st.secrets["general"]["spreadsheet"]  # secrets.toml 파일에서 불러오기
+    sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
+    return sheet
+
+# Google Sheets 데이터 로드 및 저장
 def load_data():
-    sheet_url = "https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
-    df = pd.read_csv(sheet_url)
-    return df
+    sheet = connect_gsheet()
+    return pd.DataFrame(sheet.get_all_records())
 
-def save_data(df):
-    df.to_csv("student_data.csv", index=False)
+def save_data(data):
+    sheet = connect_gsheet()
+    sheet.clear()
+    sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
-def add_record(df, index, activity, result, detail):
-    new_record = f"{activity}: {result} ({detail})"
-    df.at[index, "기록"] = f"{df.at[index, '기록']} | {new_record}" if pd.notna(df.at[index, "기록"]) else new_record
+# 기록을 추가하는 함수
+def add_record(data, student_index, activity, reward=None, additional_info=None):
+    record_list = ast.literal_eval(data.at[student_index, "기록"])
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    new_record = {
+        "timestamp": timestamp,
+        "activity": activity,
+        "reward": reward,
+        "additional_info": additional_info
+    }
+    record_list.append(new_record)
+    data.at[student_index, "기록"] = str(record_list)
+    save_data(data)
 
-# 초기화
+# --- 🌟 UI 스타일 --- 
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: url('https://global-assets.benzinga.com/kr/2025/02/16222019/1739712018-Cryptocurrency-Photo-by-SvetlanaParnikov.jpeg') repeat !important;
+        background-size: 150px 150px !important;
+    }
+    .header-img {
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    html, body, [class*="css"] {
+        color: #ffffff;
+        font-family: 'Orbitron', sans-serif;
+    }
+    .stButton>button {
+         background-color: #808080 !important;
+         color: #fff;
+         font-weight: bold;
+         border: none;
+         border-radius: 8px;
+         padding: 10px 20px;
+         font-size: 16px;
+         transition: transform 0.2s ease-in-out;
+         box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    '<div style="text-align:center;">'
+    '<img class="header-img" src="https://media1.giphy.com/media/30VBSGB7QW1RJpNcHO/giphy.gif" alt="Bitcoin GIF">'
+    '</div>',
+    unsafe_allow_html=True
+)
+
+# --- 🎓 교사용 UI --- 
+user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용"])
+
+# 데이터 로드
 data = load_data()
-st.title("🎲 학생 코인 관리 시스템")
 
-student_name = st.text_input("이름을 입력하세요:")
-if student_name:
-    student_row = data[data["이름"] == student_name]
+if user_type == "교사용":
+    selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
+    filtered_data = data[data["반"] == selected_class]
+    selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
+    student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
-    if student_row.empty:
-        st.error("존재하지 않는 학생입니다.")
-    else:
-        student_index = student_row.index[0]
-        student_coins = data.at[student_index, "세진코인"]
+    password = st.text_input("관리자 비밀번호를 입력하세요:", type="password")
+    if password == st.secrets["general"]["admin_password"]:
+        coin_amount = st.number_input("부여 또는 회수할 코인 수:", min_value=-100, max_value=100, value=1)
 
-        st.write(f"💰 현재 세진코인: `{student_coins}`")
-
-        # ✅ 코인 추가 / 차감 기능
-        with st.expander("💰 코인 관리"):
-            change_amount = st.number_input("변경할 코인 수", min_value=-100, max_value=100, value=0)
-            if st.button("코인 업데이트"):
-                data.at[student_index, "세진코인"] += change_amount
-                add_record(data, student_index, "코인 변경", f"{change_amount:+}", "관리자 조정")
+        if st.button("세진코인 변경하기"):
+            if coin_amount != 0:
+                data.at[student_index, "세진코인"] += coin_amount
+                add_record(data, student_index, "세진코인 변경", None, f"변경된 코인: {coin_amount}")
                 save_data(data)
-                st.success(f"✅ 코인이 {change_amount:+}만큼 변경되었습니다!")
+                st.success(f"{selected_student}에게 {coin_amount}개를 변경했습니다!")
 
-        # ✅ 로또 게임 추가
-        st.header("🎯 로또 게임")
-        chosen_numbers = st.multiselect("1~20 사이에서 3개의 숫자를 선택하세요.", list(range(1, 21)), default=[])
+        if st.button("⚠️ 세진코인 초기화"):
+            data.at[student_index, "세진코인"] = 0
+            data.at[student_index, "기록"] = "[]"
+            add_record(data, student_index, "세진코인 초기화", None, "초기화됨")
+            save_data(data)
+            st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
 
-        if len(chosen_numbers) == 3 and st.button("로또 게임 시작"):
-            if student_coins < 1:
-                st.error("세진코인이 부족합니다.")
-            else:
-                data.at[student_index, "세진코인"] -= 1
-                main_balls = random.sample(range(1, 21), 3)
-                bonus_ball = random.choice([n for n in range(1, 21) if n not in main_balls])
+        updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])
+        st.subheader(f"{selected_student}의 최신 정보")
+        st.dataframe(updated_student_data)
 
-                st.markdown(f"🎲 **추첨 중...**", unsafe_allow_html=True)
-                time.sleep(2)
+elif user_type == "학생용":
+    selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
+    filtered_data = data[data["반"] == selected_class]
+    selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
+    student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
-                st.write(f"🎯 **당첨번호:** `{sorted(main_balls)}` | 보너스 볼: `{bonus_ball}`")
-                matches = set(chosen_numbers) & set(main_balls)
+    student_coins = int(data.at[student_index, "세진코인"])
+    st.markdown(f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>", unsafe_allow_html=True)
 
-                reward = "꽝"
-                if len(matches) == 3:
-                    reward = "🎉 **치킨 당첨! 🍗**"
-                elif len(matches) == 2 and bonus_ball in chosen_numbers:
-                    reward = "🍔 **햄버거세트 당첨!**"
-                elif len(matches) == 2:
-                    reward = "🛒 **매점 이용권 당첨!**"
-                elif len(matches) == 1:
-                    reward = "🪙 **0.5 세진코인 지급!**"
-                    data.at[student_index, "세진코인"] += 0.5
+    password = st.text_input("비밀번호를 입력하세요:", type="password")
+
+    if password == str(data.at[student_index, "비밀번호"]):
+        st.subheader("🎰 세진코인 로또 게임 (1코인 차감)")
+
+        chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개** 선택:", list(range(1, 21)))
+
+        if 'last_play_time' not in st.session_state or time.time() - st.session_state.last_play_time > 5:
+            if len(chosen_numbers) == 3 and st.button("로또 게임 시작"):
+                if student_coins < 1:
+                    st.error("세진코인이 부족합니다.")
                 else:
-                    reward = "❌ **아쉽지만 꽝! 다음 기회에...**"
+                    data.at[student_index, "세진코인"] -= 1
+                    main_balls = random.sample(range(1, 21), 3)
+                    bonus_ball = random.choice([n for n in range(1, 21) if n not in main_balls])
 
-                add_record(data, student_index, "로또", reward, f"선택: {chosen_numbers}")
-                save_data(data)
+                    st.write(f"**당첨번호:** {sorted(main_balls)}, 보너스 볼: {bonus_ball}")
+                    matches = set(chosen_numbers) & set(main_balls)
 
-                # 결과 출력
-                if reward != "꽝":
-                    st.success(f"🎉 {reward}")
-                else:
-                    st.warning(f"{reward}")
+                    reward = "당첨 없음"
+                    if len(matches) == 3:
+                        reward = "치킨"
+                    elif len(matches) == 2 and bonus_ball in chosen_numbers:
+                        reward = "햄버거세트"
+                    elif len(matches) == 2:
+                        reward = "매점이용권"
+                    elif len(matches) == 1:
+                        reward = "0.5코인"
+                        data.at[student_index, "세진코인"] += 0.5
 
-        # ✅ 기록 조회
-        st.header("📜 기록 조회")
-        if pd.notna(data.at[student_index, "기록"]):
-            st.text_area("📌 최근 활동 기록", data.at[student_index, "기록"], height=150)
+                    add_record(data, student_index, "로또", reward, f"선택: {chosen_numbers}")
+                    save_data(data)
+
+                    st.session_state.last_play_time = time.time()
+
         else:
-            st.info("기록이 없습니다.")
-
+            st.warning("5초 후에 다시 시도하세요.")
