@@ -3,6 +3,7 @@ import pandas as pd
 import ast
 from datetime import datetime
 import random
+import time
 import gspread
 from google.oauth2.service_account import Credentials
 
@@ -13,8 +14,10 @@ def connect_gsheet():
         scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     )
     client = gspread.authorize(creds)
-    sheet_url = st.secrets["general"]["spreadsheet"]
-    sheet = client.open_by_url(sheet_url).sheet1
+    
+    # 👉 Google Sheets URL 사용
+    sheet_url = st.secrets["general"]["spreadsheet"]  # secrets.toml 파일에서 불러오기
+    sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
     return sheet
 
 # Google Sheets 데이터 로드
@@ -22,7 +25,7 @@ def load_data():
     sheet = connect_gsheet()
     return pd.DataFrame(sheet.get_all_records())
 
-# 기록 추가 함수
+# 기록을 추가하는 함수
 def add_record(student_index, activity, reward=None, additional_info=None):
     record_list = ast.literal_eval(data.at[student_index, "기록"])
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -35,18 +38,22 @@ def add_record(student_index, activity, reward=None, additional_info=None):
     record_list.append(new_record)
     data.at[student_index, "기록"] = str(record_list)
 
-# 데이터 저장 함수
+# 데이터 저장 함수 (구현 필요)
 def save_data(data):
     sheet = connect_gsheet()
     sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
-# --- 🌟 UI 스타일 ---
-st.markdown("""
+# --- 🌟 UI 스타일 --- 
+st.markdown(
+    """
     <style>
+    /* 배경화면 및 GIF 설정 */
     .stApp {
         background: url('https://global-assets.benzinga.com/kr/2025/02/16222019/1739712018-Cryptocurrency-Photo-by-SvetlanaParnikov.jpeg') repeat !important;
         background-size: 150px 150px !important;
     }
+
+    /* 헤더 비트코인 GIF 추가 */
     .header-img {
         width: 100%;
         max-height: 300px;
@@ -54,10 +61,14 @@ st.markdown("""
         border-radius: 10px;
         margin-bottom: 20px;
     }
+
+    /* 텍스트 색상 및 폰트 설정 */
     html, body, [class*="css"] {
         color: #ffffff;
         font-family: 'Orbitron', sans-serif;
     }
+
+    /* 버튼 스타일링 */
     .stButton>button {
          background-color: #808080 !important;
          color: #fff;
@@ -69,9 +80,18 @@ st.markdown("""
          transition: transform 0.2s ease-in-out;
          box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
     }
+
     </style>
     """,
     unsafe_allow_html=True,
+)
+
+# 헤더 비트코인 GIF 이미지
+st.markdown(
+    '<div style="text-align:center;">'
+    '<img class="header-img" src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemVldTNsMGVpMjZzdjhzc3hnbzl0d2szYjNoNXY2ZGt4ZXVtNncyciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/30VBSGB7QW1RJpNcHO/giphy.gif" alt="Bitcoin GIF">'
+    '</div>',
+    unsafe_allow_html=True
 )
 
 # --- 🎓 UI 선택 ---
@@ -92,16 +112,21 @@ if user_type == "교사용":
         coin_amount = st.number_input("부여 또는 회수할 코인 수:", min_value=-100, max_value=100, value=1)
 
         if st.button("세진코인 변경하기"):
-            data.at[student_index, "세진코인"] += coin_amount
-            add_record(student_index, "세진코인 변경", additional_info=f"변경된 코인: {coin_amount}")
-            save_data(data)
-            st.success(f"{selected_student}에게 세진코인 {coin_amount}개를 부여했습니다!")
+            if coin_amount != 0:
+                data.at[student_index, "세진코인"] += coin_amount
+                add_record(student_index, "세진코인 변경", reward=None, additional_info=f"변경된 코인: {coin_amount}")
+                save_data(data)
+
+                if coin_amount > 0:
+                    st.success(f"{selected_student}에게 세진코인 {coin_amount}개를 부여했습니다!")
+                else:
+                    st.warning(f"{selected_student}에게서 세진코인 {-coin_amount}개를 회수했습니다!")
 
         # 세진코인 초기화
         if st.button("⚠️ 세진코인 초기화"):
             data.at[student_index, "세진코인"] = 0
             data.at[student_index, "기록"] = "[]"
-            add_record(student_index, "세진코인 초기화", additional_info="세진코인 및 기록 초기화")
+            add_record(student_index, "세진코인 초기화", reward=None, additional_info="세진코인 및 기록 초기화")
             save_data(data)
             st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
 
@@ -109,7 +134,7 @@ if user_type == "교사용":
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
 
-# --- 🎒 학생용 UI ---
+# --- 🎒 학생용 UI --- 
 elif user_type == "학생용":
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
     filtered_data = data[data["반"] == selected_class]
@@ -131,8 +156,9 @@ elif user_type == "학생용":
                 st.error("세진코인이 부족합니다.")
             else:
                 data.at[student_index, "세진코인"] -= 1
-                main_balls = random.sample(range(1, 21), 3)
-                bonus_ball = random.choice([n for n in range(1, 21) if n not in main_balls])
+                pool = list(range(1, 21))
+                main_balls = random.sample(pool, 3)
+                bonus_ball = random.choice([n for n in pool if n not in main_balls])
 
                 st.write("**컴퓨터 추첨 결과:**")
                 st.write("메인 볼:", sorted(main_balls))
@@ -140,25 +166,46 @@ elif user_type == "학생용":
 
                 matches = set(chosen_numbers) & set(main_balls)
                 match_count = len(matches)
-                reward = None
 
+                reward = None
                 if match_count == 3:
+                    st.success("🎉 1등 당첨! 상품: 치킨")
                     reward = "치킨"
-                elif match_count == 2 and (set(chosen_numbers) - matches).pop() == bonus_ball:
+                elif match_count == 2 and list(set(chosen_numbers) - matches)[0] == bonus_ball:
+                    st.success("🎉 2등 당첨! 상품: 햄버거세트")
                     reward = "햄버거세트"
                 elif match_count == 2:
+                    st.success("🎉 3등 당첨! 상품: 매점이용권")
                     reward = "매점이용권"
                 elif match_count == 1:
+                    st.success("🎉 4등 당첨! 보상: 0.5코인")
                     reward = "0.5코인"
                     data.at[student_index, "세진코인"] += 0.5
+                else:
+                    st.error("😢 아쉽게도 당첨되지 않았습니다.")
 
                 add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
                 save_data(data)
 
-# --- 📊 통계용 UI ---
+        # 최근 당첨 기록 탭
+        st.subheader(f"{selected_student}님의 최근 당첨 기록")
+        record_list = ast.literal_eval(data.at[student_index, "기록"])
+        lotto_records = [record for record in record_list if record["activity"] == "로또"]
+
+        if lotto_records:
+            for record in lotto_records:
+                st.write(f"**{record['timestamp']}**")
+                st.write(f"당첨 번호: {record['additional_info']}")
+                st.write(f"보상: {record['reward']}")
+                st.write("---")
+        else:
+            st.info("아직 당첨 기록이 없습니다.")
+
+# --- 📊 통계용 UI --- 
 elif user_type == "통계용":
     st.subheader("📊 로또 당첨 통계")
     all_records = []
+
     for _, row in data.iterrows():
         records = ast.literal_eval(row["기록"])
         for record in records:
@@ -172,11 +219,10 @@ elif user_type == "통계용":
                 })
 
     df_records = pd.DataFrame(all_records)
+
     if not df_records.empty:
         st.dataframe(df_records)
+        st.subheader("📈 당첨 횟수 통계")
         st.write(df_records["보상"].value_counts())
-        high_prize_df = df_records[df_records["보상"].isin(["매점이용권", "햄버거세트", "치킨"])]
-        if not high_prize_df.empty:
-            st.dataframe(high_prize_df)
-        else:
-            st.info("아직 3등 이상 당첨된 학생이 없습니다.")
+    else:
+        st.info("아직 로또 당첨 기록이 없습니다.")
