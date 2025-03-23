@@ -15,19 +15,24 @@ def connect_gsheet():
     )
     client = gspread.authorize(creds)
     
-    sheet_url = st.secrets["general"]["spreadsheet"]
-    sheet = client.open_by_url(sheet_url).sheet1
+    # 👉 Google Sheets URL 사용
+    sheet_url = st.secrets["general"]["spreadsheet"]  # secrets.toml 파일에서 불러오기
+    sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
     return sheet
 
+# --- 데이터 캐싱 적용: 데이터 로딩 최적화 ---
+@st.cache_data(ttl=3600)  # 캐시 1시간 동안 유지
 def load_data():
     sheet = connect_gsheet()
     return pd.DataFrame(sheet.get_all_records())
 
+# 데이터 저장 (캐시된 데이터 업데이트)
 def save_data(data):
     sheet = connect_gsheet()
     sheet.clear()
     sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
+# 기록을 추가하는 함수
 def add_record(data, student_index, activity, reward=None, additional_info=None):
     record_list = ast.literal_eval(data.at[student_index, "기록"])
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -41,6 +46,7 @@ def add_record(data, student_index, activity, reward=None, additional_info=None)
     data.at[student_index, "기록"] = str(record_list)
     save_data(data)
 
+# --- 🌟 UI 스타일 --- 
 st.markdown(
     """
     <style>
@@ -82,9 +88,33 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# --- 🎓 교사용 UI --- 
 user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용"])
 
+# 데이터 로드
 data = load_data()
+
+# 로또 게임 결과 계산 (캐싱 적용)
+@st.cache_data(ttl=3600)
+def calculate_lotto_result(chosen_numbers, student_coins):
+    main_balls = random.sample(range(1, 21), 3)
+    bonus_ball = random.choice([n for n in range(1, 21) if n not in main_balls])
+    matches = set(chosen_numbers) & set(main_balls)
+    match_count = len(matches)
+    bonus_matched = bonus_ball in chosen_numbers
+
+    reward = "당첨 없음"
+    if match_count == 3:
+        reward = "🎉 1등! 치킨 🎉"
+    elif match_count == 2 and bonus_matched:
+        reward = "🥈 2등! 햄버거 세트 🍔"
+    elif match_count == 2:
+        reward = "🥉 3등! 매점 이용권 🍫"
+    elif match_count == 1:
+        reward = "💰 4등! 0.5코인 💰"
+        student_coins += 0.5
+
+    return main_balls, bonus_ball, reward
 
 if user_type == "교사용":
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
@@ -136,29 +166,15 @@ elif user_type == "학생용":
                     st.error("세진코인이 부족합니다.")
                 else:
                     data.at[student_index, "세진코인"] -= 1
-                    main_balls = random.sample(range(1, 21), 3)
-                    bonus_ball = random.choice([n for n in range(1, 21) if n not in main_balls])
+                    main_balls, bonus_ball, reward = calculate_lotto_result(chosen_numbers, student_coins)
+                    st.write(f"**당첨번호:** {sorted(main_balls)}, 보너스 볼: {bonus_ball}")
+                    st.write(f"**결과:** {reward}")
 
-                    matches = set(chosen_numbers) & set(main_balls)
-                    match_count = len(matches)
-                    bonus_matched = bonus_ball in chosen_numbers
-
-                    reward = "당첨 없음"
-                    if match_count == 3:
-                        reward = "🎉 1등! 치킨 🎉"
-                    elif match_count == 2 and bonus_matched:
-                        reward = "🥈 2등! 햄버거 세트 🍔"
-                    elif match_count == 2:
-                        reward = "🥉 3등! 매점 이용권 🍫"
-                    elif match_count == 1:
-                        reward = "💰 4등! 0.5코인 💰"
+                    if reward == "💰 4등! 0.5코인 💰":
                         data.at[student_index, "세진코인"] += 0.5
 
-                    add_record(data, student_index, "로또", reward, f"선택: {chosen_numbers}, 당첨번호: {sorted(main_balls)}, 보너스: {bonus_ball}")
+                    add_record(data, student_index, "로또", reward, f"선택: {chosen_numbers}")
                     save_data(data)
-
-                    st.markdown(f"### 🎲 당첨 번호: {sorted(main_balls)} | 보너스 볼: {bonus_ball}")
-                    st.success(f"결과: {reward}")
 
                     st.session_state.last_play_time = time.time()
 
