@@ -15,24 +15,23 @@ def connect_gsheet():
     )
     client = gspread.authorize(creds)
     
-    # 👉 Google Sheets URL 사용
-    sheet_url = st.secrets["general"]["spreadsheet"]  # secrets.toml 파일에서 불러오기
-    sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
+    sheet_url = st.secrets["general"]["spreadsheet"]  
+    sheet = client.open_by_url(sheet_url).sheet1  
     return sheet
 
-# --- 데이터 캐싱 적용: 데이터 로딩 최적화 ---
-@st.cache_data(ttl=30)  # 캐시 30초 동안 유지
+# 데이터 로딩 함수 (캐시 적용)
+@st.cache_data(ttl=300)
 def load_data():
     sheet = connect_gsheet()
     return pd.DataFrame(sheet.get_all_records())
 
-# 데이터 저장 (캐시된 데이터 업데이트)
+# 데이터 저장
 def save_data(data):
     sheet = connect_gsheet()
     sheet.clear()
     sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
-# 기록을 추가하는 함수
+# 기록 추가
 def add_record(data, student_index, activity, reward=None, additional_info=None):
     record_list = ast.literal_eval(data.at[student_index, "기록"])
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -45,6 +44,28 @@ def add_record(data, student_index, activity, reward=None, additional_info=None)
     record_list.append(new_record)
     data.at[student_index, "기록"] = str(record_list)
     save_data(data)
+
+# 로또 결과 계산 (학생별로 캐시 적용)
+@st.cache_data(ttl=300)
+def calculate_lotto_result(chosen_numbers, student_coins):
+    main_balls = random.sample(range(1, 21), 3)
+    bonus_ball = random.choice([n for n in range(1, 21) if n not in main_balls])
+    matches = set(chosen_numbers) & set(main_balls)
+    match_count = len(matches)
+    bonus_matched = bonus_ball in chosen_numbers
+
+    reward = "당첨 없음"
+    if match_count == 3:
+        reward = "🎉 1등! 치킨 🎉"
+    elif match_count == 2 and bonus_matched:
+        reward = "🥈 2등! 햄버거 세트 🍔"
+    elif match_count == 2:
+        reward = "🥉 3등! 매점 이용권 🍫"
+    elif match_count == 1:
+        reward = "💰 4등! 0.5코인 💰"
+        student_coins += 0.5
+
+    return main_balls, bonus_ball, reward, student_coins
 
 # --- 🌟 UI 스타일 --- 
 st.markdown(
@@ -94,28 +115,6 @@ user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사�
 # 데이터 로드
 data = load_data()
 
-# 로또 게임 결과 계산 (캐싱 적용)
-@st.cache_data(ttl=300)  # 캐시 5분 동안 유지
-def calculate_lotto_result(chosen_numbers, student_coins):
-    main_balls = random.sample(range(1, 21), 3)
-    bonus_ball = random.choice([n for n in range(1, 21) if n not in main_balls])
-    matches = set(chosen_numbers) & set(main_balls)
-    match_count = len(matches)
-    bonus_matched = bonus_ball in chosen_numbers
-
-    reward = "당첨 없음"
-    if match_count == 3:
-        reward = "🎉 1등! 치킨 🎉"
-    elif match_count == 2 and bonus_matched:
-        reward = "🥈 2등! 햄버거 세트 🍔"
-    elif match_count == 2:
-        reward = "🥉 3등! 매점 이용권 🍫"
-    elif match_count == 1:
-        reward = "💰 4등! 0.5코인 💰"
-        student_coins += 0.5
-
-    return main_balls, bonus_ball, reward, student_coins
-
 if user_type == "교사용":
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
     filtered_data = data[data["반"] == selected_class]
@@ -150,11 +149,8 @@ elif user_type == "학생용":
     selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
-    # 세진코인 상태를 session_state로 관리
-    if "student_coins" not in st.session_state:
-        st.session_state.student_coins = int(data.at[student_index, "세진코인"])
-
-    st.markdown(f"<h2>{selected_student}님의 세진코인은 {st.session_state.student_coins}개입니다.</h2>", unsafe_allow_html=True)
+    student_coins = int(data.at[student_index, "세진코인"])
+    st.markdown(f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>", unsafe_allow_html=True)
 
     password = st.text_input("비밀번호를 입력하세요:", type="password")
 
@@ -165,23 +161,23 @@ elif user_type == "학생용":
 
         if 'last_play_time' not in st.session_state or time.time() - st.session_state.last_play_time > 5:
             if len(chosen_numbers) == 3 and st.button("로또 게임 시작"):
-                if st.session_state.student_coins < 1:
+                if student_coins < 1:
                     st.error("세진코인이 부족합니다.")
                 else:
-                    # 로또 게임을 시작한 후, 코인을 차감하고 결과를 계산합니다.
-                    main_balls, bonus_ball, reward, updated_coins = calculate_lotto_result(chosen_numbers, st.session_state.student_coins)
+                    data.at[student_index, "세진코인"] -= 1
+                    main_balls, bonus_ball, reward, updated_coins = calculate_lotto_result(chosen_numbers, student_coins)
 
-                    # 세진코인 업데이트
-                    st.session_state.student_coins = updated_coins
-
+                    # 로또 결과와 보상 표시
                     st.write(f"**당첨번호:** {sorted(main_balls)}, 보너스 볼: {bonus_ball}")
                     st.write(f"**결과:** {reward}")
-
-                    if reward == "💰 4등! 0.5코인 💰":
-                        data.at[student_index, "세진코인"] += 0.5
-
+                    
+                    # 세진코인 업데이트
+                    data.at[student_index, "세진코인"] = updated_coins
                     add_record(data, student_index, "로또", reward, f"선택: {chosen_numbers}")
                     save_data(data)
+
+                    # 세진코인 업데이트 확인
+                    st.success(f"최종 세진코인: {updated_coins}개")
 
                     st.session_state.last_play_time = time.time()
 
