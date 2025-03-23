@@ -21,7 +21,6 @@ def connect_gsheet():
     return sheet
 
 # Google Sheets 데이터 로드 및 저장
-@st.cache_data(ttl=30)  # 30초 캐시 적용
 def load_data():
     sheet = connect_gsheet()
     return pd.DataFrame(sheet.get_all_records())
