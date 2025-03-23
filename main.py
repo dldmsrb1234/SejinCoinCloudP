@@ -21,7 +21,7 @@ def connect_gsheet():
     return sheet
 
 # Google Sheets 데이터 로드 및 저장
-@st.cache_data(ttl=3600)  # 1시간 캐시 적용
+@st.cache_data(ttl=30)  # 30초 캐시 적용
 def load_data():
     sheet = connect_gsheet()
     return pd.DataFrame(sheet.get_all_records())
@@ -44,6 +44,31 @@ def add_record(data, student_index, activity, reward=None, additional_info=None)
     record_list.append(new_record)
     data.at[student_index, "기록"] = str(record_list)
     save_data(data)
+
+# 로또 결과 계산 함수
+def calculate_lotto_result(chosen_numbers, student_coins):
+    main_balls = random.sample(range(1, 21), 3)
+    bonus_ball = random.choice([n for n in range(1, 21) if n not in main_balls])
+
+    matches = set(chosen_numbers) & set(main_balls)
+
+    reward = "당첨 없음"
+    updated_coins = student_coins
+
+    if len(matches) == 3:
+        reward = "치킨"
+        updated_coins += 10  # 예시: 치킨 당첨 시 10코인 추가
+    elif len(matches) == 2 and bonus_ball in chosen_numbers:
+        reward = "햄버거세트"
+        updated_coins += 5  # 예시: 햄버거세트 당첨 시 5코인 추가
+    elif len(matches) == 2:
+        reward = "매점이용권"
+        updated_coins += 3  # 예시: 매점이용권 당첨 시 3코인 추가
+    elif len(matches) == 1:
+        reward = "0.5코인"
+        updated_coins += 0.5  # 예시: 0.5코인 당첨 시 0.5코인 추가
+
+    return main_balls, bonus_ball, reward, updated_coins
 
 # --- 🌟 UI 스타일 --- 
 st.markdown(
