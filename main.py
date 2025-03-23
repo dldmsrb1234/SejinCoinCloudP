@@ -20,15 +20,10 @@ def connect_gsheet():
     sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
     return sheet
 
-# Google Sheets 데이터 로드 및 저장
+# Google Sheets 데이터 로드
 def load_data():
     sheet = connect_gsheet()
     return pd.DataFrame(sheet.get_all_records())
-
-def save_data(data):
-    sheet = connect_gsheet()
-    sheet.clear()
-    sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
 # 기록을 추가하는 함수
 def add_record(student_index, activity, reward=None, additional_info=None):
@@ -42,7 +37,6 @@ def add_record(student_index, activity, reward=None, additional_info=None):
     }
     record_list.append(new_record)
     data.at[student_index, "기록"] = str(record_list)
-    save_data(data)
 
 # --- 🌟 UI 스타일 --- 
 st.markdown(
@@ -114,7 +108,7 @@ if user_type == "교사용":
             if coin_amount != 0:
                 data.at[student_index, "세진코인"] += coin_amount
                 add_record(student_index, "세진코인 변경", reward=None, additional_info=f"변경된 코인: {coin_amount}")
-                save_data(data)  # 변경된 데이터를 Google Sheets에 저장
+                save_data(data)  # 코인 변경 시만 Google Sheets에 저장
 
                 if coin_amount > 0:
                     st.success(f"{selected_student}에게 세진코인 {coin_amount}개를 부여했습니다!")
@@ -126,7 +120,7 @@ if user_type == "교사용":
             data.at[student_index, "세진코인"] = 0
             data.at[student_index, "기록"] = "[]"
             add_record(student_index, "세진코인 초기화", reward=None, additional_info="세진코인 및 기록 초기화")
-            save_data(data)  # 초기화된 데이터를 Google Sheets에 저장
+            save_data(data)  # 초기화 시만 Google Sheets에 저장
             st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
         
         updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])  # 비밀번호 제외
@@ -192,7 +186,7 @@ if user_type == "학생용":
                         st.error("😢 아쉽게도 당첨되지 않았습니다.")
 
                     add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
-                    save_data(data)
+                    save_data(data)  # 로또 실행 시만 Google Sheets에 저장
                     
                     # 5초 동안 버튼 비활성화
                     st.session_state.last_play_time = time.time()
