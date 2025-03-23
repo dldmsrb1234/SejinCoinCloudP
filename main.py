@@ -167,8 +167,9 @@ elif user_type == "학생용":
                 if student_coins < 1:
                     st.error("세진코인이 부족합니다.")
                 else:
-                    # 세진코인 차감
+                    # 로또 시작 시, 세진코인 차감
                     data.at[student_index, "세진코인"] -= 1
+                    save_data(data)  # Google Sheets에 즉시 저장
 
                     # 로또 결과 계산
                     main_balls, bonus_ball, reward, updated_coins = calculate_lotto_result(chosen_numbers, student_coins)
@@ -179,14 +180,12 @@ elif user_type == "학생용":
                     
                     # 최종 세진코인 업데이트
                     data.at[student_index, "세진코인"] = updated_coins
+                    save_data(data)  # Google Sheets에 업데이트된 코인 저장
 
                     # 기록 추가
                     add_record(data, student_index, "로또", reward, f"선택: {chosen_numbers}")
 
-                    # Google Sheets에 데이터 저장
-                    save_data(data)
-
-                    # 세진코인 업데이트 확인
+                    # 최종 코인 결과
                     st.success(f"최종 세진코인: {updated_coins}개")
 
                     # 세션 상태 업데이트
