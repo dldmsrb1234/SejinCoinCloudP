@@ -151,7 +151,8 @@ elif user_type == "학생용":
     selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
-    student_coins = int(data.at[student_index, "세진코인"])
+    # 학생의 세진코인을 바로 불러옵니다
+    student_coins = data.at[student_index, "세진코인"]
     st.markdown(f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>", unsafe_allow_html=True)
 
     password = st.text_input("비밀번호를 입력하세요:", type="password")
