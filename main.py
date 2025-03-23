@@ -21,7 +21,7 @@ def connect_gsheet():
     return sheet
 
 # --- 데이터 캐싱 적용: 데이터 로딩 최적화 ---
-@st.cache_data(ttl=3600)  # 캐시 1시간 동안 유지
+@st.cache_data(ttl=60)  # 캐시 1분 동안 유지
 def load_data():
     sheet = connect_gsheet()
     return pd.DataFrame(sheet.get_all_records())
