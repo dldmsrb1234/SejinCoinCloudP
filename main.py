@@ -221,7 +221,21 @@ elif user_type == "통계용":
     df_records = pd.DataFrame(all_records)
 
     if not df_records.empty:
+        # 전체 기록 표시
+        st.subheader("전체 로또 당첨 기록")
         st.dataframe(df_records)
+
+        # 3등 이상 당첨자 필터링
+        st.subheader("🎉 3등 이상 당첨자 목록")
+        high_rewards = ["치킨", "햄버거세트", "매점이용권"]  # 3등 이상 보상 목록
+        high_reward_winners = df_records[df_records["보상"].isin(high_rewards)]
+
+        if not high_reward_winners.empty:
+            st.dataframe(high_reward_winners[["학생", "반", "시간", "보상"]])
+        else:
+            st.info("3등 이상 당첨 기록이 없습니다.")
+
+        # 당첨 횟수 통계
         st.subheader("📈 당첨 횟수 통계")
         st.write(df_records["보상"].value_counts())
     else:
