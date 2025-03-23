@@ -94,12 +94,14 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --- 🎓 교사용 UI --- 
-user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용"])
+# --- 🎓 UI 선택 ---
+user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용", "통계용"])
 
-# 교사용 UI
+# 데이터 로드
+data = load_data()
+
+# --- 🎓 교사용 UI ---
 if user_type == "교사용":
-    data = load_data()
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
     filtered_data = data[data["반"] == selected_class]
     selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
@@ -113,113 +115,101 @@ if user_type == "교사용":
             if coin_amount != 0:
                 data.at[student_index, "세진코인"] += coin_amount
                 add_record(student_index, "세진코인 변경", reward=None, additional_info=f"변경된 코인: {coin_amount}")
-                save_data(data)  # 코인 변경 시만 Google Sheets에 저장
+                save_data(data)
 
                 if coin_amount > 0:
                     st.success(f"{selected_student}에게 세진코인 {coin_amount}개를 부여했습니다!")
                 else:
                     st.warning(f"{selected_student}에게서 세진코인 {-coin_amount}개를 회수했습니다!")
 
-        # 세진코인 초기화 버튼
+        # 세진코인 초기화
         if st.button("⚠️ 세진코인 초기화"):
             data.at[student_index, "세진코인"] = 0
             data.at[student_index, "기록"] = "[]"
             add_record(student_index, "세진코인 초기화", reward=None, additional_info="세진코인 및 기록 초기화")
-            save_data(data)  # 초기화 시만 Google Sheets에 저장
+            save_data(data)
             st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
-        
-        updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])  # 비밀번호 제외
+
+        updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
 
 # --- 🎒 학생용 UI --- 
-if user_type == "학생용":
-    data = load_data()
+elif user_type == "학생용":
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
     filtered_data = data[data["반"] == selected_class]
     selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
     student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
 
     student_coins = int(data.at[student_index, "세진코인"])
-    coin_display = f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>"
-    st.markdown(coin_display, unsafe_allow_html=True)
+    st.markdown(f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>", unsafe_allow_html=True)
 
-    # 학생 비밀번호 입력 받기
     password = st.text_input("비밀번호를 입력하세요:", type="password")
 
-    # 로또 게임과 관련된 변수들
     if password == str(data.at[student_index, "비밀번호"]):
-        # --- 🎰 로또 시스템 --- 
+        # --- 🎰 로또 시스템 ---
         st.subheader("🎰 세진코인 로또 게임 (1코인 차감)")
-
         chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
 
-        # 로또 버튼이 활성화되었을 때만 게임을 진행하도록
-        if 'last_play_time' not in st.session_state or time.time() - st.session_state.last_play_time > 5:
-            if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)"):
-                if student_coins < 1:
-                    st.error("세진코인이 부족합니다.")
+        if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)"):
+            if student_coins < 1:
+                st.error("세진코인이 부족합니다.")
+            else:
+                data.at[student_index, "세진코인"] -= 1
+                pool = list(range(1, 21))
+                main_balls = random.sample(pool, 3)
+                bonus_ball = random.choice([n for n in pool if n not in main_balls])
+
+                st.write("**컴퓨터 추첨 결과:**")
+                st.write("메인 볼:", sorted(main_balls))
+                st.write("보너스 볼:", bonus_ball)
+
+                matches = set(chosen_numbers) & set(main_balls)
+                match_count = len(matches)
+
+                reward = None
+                if match_count == 3:
+                    st.success("🎉 1등 당첨! 상품: 치킨")
+                    reward = "치킨"
+                elif match_count == 2 and list(set(chosen_numbers) - matches)[0] == bonus_ball:
+                    st.success("🎉 2등 당첨! 상품: 햄버거세트")
+                    reward = "햄버거세트"
+                elif match_count == 2:
+                    st.success("🎉 3등 당첨! 상품: 매점이용권")
+                    reward = "매점이용권"
+                elif match_count == 1:
+                    st.success("🎉 4등 당첨! 보상: 0.5코인")
+                    reward = "0.5코인"
+                    data.at[student_index, "세진코인"] += 0.5
                 else:
-                    data.at[student_index, "세진코인"] -= 1
-                    pool = list(range(1, 21))
-                    main_balls = random.sample(pool, 3)
-                    bonus_ball = random.choice([n for n in pool if n not in main_balls])
+                    st.error("😢 아쉽게도 당첨되지 않았습니다.")
 
-                    st.write("**컴퓨터 추첨 결과:**")
-                    st.write("메인 볼:", sorted(main_balls))
-                    st.write("보너스 볼:", bonus_ball)
+                add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
+                save_data(data)
 
-                    matches = set(chosen_numbers) & set(main_balls)
-                    match_count = len(matches)
+# --- 📊 통계용 UI ---
+elif user_type == "통계용":
+    st.subheader("📊 로또 당첨 통계")
 
-                    reward = ""
-                    if match_count == 3:
-                        st.success("🎉 1등 당첨! 상품: 치킨")
-                        reward = "치킨"
-                    elif match_count == 2 and list(set(chosen_numbers) - matches)[0] == bonus_ball:
-                        st.success("🎉 2등 당첨! 상품: 햄버거세트")
-                        reward = "햄버거세트"
-                    elif match_count == 2:
-                        st.success("🎉 3등 당첨! 상품: 매점이용권")
-                        reward = "매점이용권"
-                    elif match_count == 1:
-                        st.success("🎉 4등 당첨! 보상: 0.5코인")
-                        reward = "0.5코인"
-                        data.at[student_index, "세진코인"] += 0.5
-                    else:
-                        st.error("😢 아쉽게도 당첨되지 않았습니다.")
+    # 로또 기록 수집
+    all_records = []
+    for index, row in data.iterrows():
+        records = ast.literal_eval(row["기록"])
+        for record in records:
+            if record["activity"] == "로또":
+                all_records.append({
+                    "학생": row["학생"],
+                    "반": row["반"],
+                    "시간": record["timestamp"],
+                    "보상": record["reward"],
+                    "당첨번호": record["additional_info"]
+                })
 
-                    add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
-                    save_data(data)  # 로또 실행 시만 Google Sheets에 저장
-                    
-                    # 5초 동안 버튼 비활성화
-                    st.session_state.last_play_time = time.time()
-        else:
-            st.warning("로또 게임을 진행한 후 5초가 지나야 다시 시도할 수 있습니다.")
-        
-        # --- 최근 당첨 기록 탭 ---
-        st.subheader(f"{selected_student}님의 최근 당첨 기록")
-        record_list = ast.literal_eval(data.at[student_index, "기록"])
-        
-        # "로또" 활동만 필터링
-        lotto_records = [record for record in record_list if record["activity"] == "로또"]
-        
-        if lotto_records:
-            for record in lotto_records:
-                st.write(f"**{record['timestamp']}**")
-                st.write(f"당첨 번호: {record['additional_info']}")
-                st.write(f"보상: {record['reward']}")
-                st.write("---")
-        else:
-            st.info("아직 당첨 기록이 없습니다. 로또 게임에 도전해보세요!")
-        
-        # 학생 본인의 전체 활동 기록 보기
-        st.subheader(f"{selected_student}님의 전체 활동 기록")
-        for record in record_list:
-            st.write(f"**{record['timestamp']}** - {record['activity']}")
-            if record['reward']:
-                st.write(f"  보상: {record['reward']}")
-            if record['additional_info']:
-                st.write(f"  추가 정보: {record['additional_info']}")
+    df_records = pd.DataFrame(all_records)
+
+    if not df_records.empty:
+        st.dataframe(df_records)
+        st.subheader("📈 당첨 횟수 통계")
+        st.write(df_records["보상"].value_counts())
     else:
-        st.error("비밀번호가 틀렸습니다. 다시 시도해주세요.")
+        st.info("아직 로또 당첨 기록이 없습니다.")
