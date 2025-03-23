@@ -187,13 +187,26 @@ elif user_type == "학생용":
                 add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
                 save_data(data)
 
-# --- 📊 통계용 UI ---
+        # 최근 당첨 기록 탭
+        st.subheader(f"{selected_student}님의 최근 당첨 기록")
+        record_list = ast.literal_eval(data.at[student_index, "기록"])
+        lotto_records = [record for record in record_list if record["activity"] == "로또"]
+
+        if lotto_records:
+            for record in lotto_records:
+                st.write(f"**{record['timestamp']}**")
+                st.write(f"당첨 번호: {record['additional_info']}")
+                st.write(f"보상: {record['reward']}")
+                st.write("---")
+        else:
+            st.info("아직 당첨 기록이 없습니다.")
+
+# --- 📊 통계용 UI --- 
 elif user_type == "통계용":
     st.subheader("📊 로또 당첨 통계")
-
-    # 로또 기록 수집
     all_records = []
-    for index, row in data.iterrows():
+
+    for _, row in data.iterrows():
         records = ast.literal_eval(row["기록"])
         for record in records:
             if record["activity"] == "로또":
