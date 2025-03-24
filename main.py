@@ -6,6 +6,8 @@ import random
 import time
 import gspread
 from google.oauth2.service_account import Credentials
+import os
+import pickle
 
 # --- Google Sheets API 연결 ---
 def connect_gsheet():
@@ -20,18 +22,35 @@ def connect_gsheet():
     sheet = client.open_by_url(sheet_url).sheet1  # 첫 번째 시트 선택
     return sheet
 
+# 캐시된 데이터를 로드하는 함수
+def load_data_from_cache():
+    cache_file = "data_cache.pkl"
+    if os.path.exists(cache_file):
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+    else:
+        return None
+
+# 캐시된 데이터를 저장하는 함수
+def save_data_to_cache(data):
+    with open("data_cache.pkl", "wb") as f:
+        pickle.dump(data, f)
+
 # Google Sheets 데이터 로드
 def load_data():
-    sheet = connect_gsheet()
-    # 데이터 로드 시 지연 추가
-    time.sleep(1)  # 1초 지연 (요청 초과 방지)
-    return pd.DataFrame(sheet.get_all_records())
+    cached_data = load_data_from_cache()
+    if cached_data is not None:
+        return cached_data
+    else:
+        sheet = connect_gsheet()
+        data = pd.DataFrame(sheet.get_all_records())
+        save_data_to_cache(data)
+        return data
 
 def save_data(data):
     sheet = connect_gsheet()
-    # 데이터 저장 시 지연 추가
-    time.sleep(1)  # 1초 지연 (요청 초과 방지)
     sheet.update([data.columns.values.tolist()] + data.values.tolist())
+    save_data_to_cache(data)  # 캐시에 저장하여 후속 호출에 대비
 
 # 기록을 추가하는 함수
 def add_record(student_index, activity, reward=None, additional_info=None):
@@ -45,8 +64,6 @@ def add_record(student_index, activity, reward=None, additional_info=None):
     }
     record_list.append(new_record)
     data.at[student_index, "기록"] = str(record_list)
-
-
 
 # --- 🌟 UI 스타일 --- 
 st.markdown(
@@ -99,7 +116,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --- 🎓 UI 선택 ---
+# --- 🎓 UI 선택 --- 
 user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용", "통계용"])
 
 # 데이터 로드
