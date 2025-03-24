@@ -148,48 +148,50 @@ elif user_type == "학생용":
     password = st.text_input("비밀번호를 입력하세요:", type="password")
 
     if password == str(data.at[student_index, "비밀번호"]):
-        # --- 🎰 로또 시스템 ---
+        # --- 🎰 로또 시스템 --- 
         st.subheader("🎰 세진코인 로또 게임 (1코인 차감)")
         chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
 
         if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)", key="lotto_button"):
             # 4초 대기 후 로또 진행
             with st.spinner("잠시만 기다려 주세요... 로또 진행 중입니다."):
-                  # 4초 대기
+                if student_coins < 1:
+                    st.error("세진코인이 부족하여 로또를 진행할 수 없습니다.")
+                else:
+                    # 로또 추첨 진행
+                    data.at[student_index, "세진코인"] -= 1
+                    pool = list(range(1, 21))
+                    main_balls = random.sample(pool, 3)
+                    bonus_ball = random.choice([n for n in pool if n not in main_balls])
 
-            if student_coins < 1:
-                st.error("세진코인이 부족하여 로또를 진행할 수 없습니다.")
-            else:
-            with st.spinner("잠시만 기다려 주세요... 로또 진행 중입니다."):
-            # 로또 추첨 진행
-            data.at[student_index, "세진코인"] -= 1
-            pool = list(range(1, 21))
-            main_balls = random.sample(pool, 3)
-            bonus_ball = random.choice([n for n in pool if n not in main_balls])
+                    st.write("**컴퓨터 추첨 결과:**")
+                    st.write("메인 볼:", sorted(main_balls))
+                    st.write("보너스 볼:", bonus_ball)
 
-            st.write("**컴퓨터 추첨 결과:**")
-            st.write("메인 볼:", sorted(main_balls))
-            st.write("보너스 볼:", bonus_ball)
+                    # 당첨 확인 및 보상 제공
+                    matches = set(chosen_numbers) & set(main_balls)
+                    match_count = len(matches)
 
-        # 당첨 확인 및 보상 제공
-        if set(chosen_numbers) == set(main_balls):
-            reward = "치킨"
-            add_record(student_index, "로또 1등 당첨", reward=reward)
-        elif set(chosen_numbers) == set(main_balls[:2]) and bonus_ball in chosen_numbers:
-            reward = "햄버거세트"
-            add_record(student_index, "로또 2등 당첨", reward=reward)
-        elif set(chosen_numbers) == set(main_balls[:2]):
-            reward = "매점이용권"
-            add_record(student_index, "로또 3등 당첨", reward=reward)
-        elif chosen_numbers[0] in main_balls:
-            reward = "0.5코인"
-            add_record(student_index, "로또 4등 당첨", reward=reward)
-        else:
-            reward = "꽝"
-            add_record(student_index, "로또 꽝", reward=None)
+                    reward = None
+                    if match_count == 3:
+                        st.success("🎉 1등 당첨! 상품: 치킨")
+                        reward = "치킨"
+                    elif match_count == 2 and list(set(chosen_numbers) - matches)[0] == bonus_ball:
+                        st.success("🎉 2등 당첨! 상품: 햄버거세트")
+                        reward = "햄버거세트"
+                    elif match_count == 2:
+                        st.success("🎉 3등 당첨! 상품: 매점이용권")
+                        reward = "매점이용권"
+                    elif match_count == 1:
+                        st.success("🎉 4등 당첨! 보상: 0.5코인")
+                        reward = "0.5코인"
+                        data.at[student_index, "세진코인"] += 0.5
+                    else:
+                        st.error("😢 아쉽게도 당첨되지 않았습니다.")
 
-        save_data(data)
-        st.success(f"당첨 결과: {reward}!")
+                    add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
+                    save_data(data)
+                    st.success(f"당첨 결과: {reward}!")
 
 
 # --- 📊 통계용 UI --- 
