@@ -151,10 +151,24 @@ elif user_type == "학생용":
         st.subheader("🎰 세진코인 로또 게임 (1코인 차감)")
         chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
 
-        if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)"):
+        # 로또 버튼 상태 관리
+        if "lotto_disabled" not in st.session_state:
+            st.session_state.lotto_disabled = False
+
+        # 버튼이 비활성화된 경우 경고 메시지 표시
+        if st.session_state.lotto_disabled:
+            st.warning("⏳ 4초 후 다시 시도할 수 있습니다.")
+
+        if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)", disabled=st.session_state.lotto_disabled):
             if student_coins < 1:
                 st.error("세진코인이 부족합니다.")
             else:
+                # 4초 동안 버튼 비활성화
+                st.session_state.lotto_disabled = True
+                time.sleep(4)
+                st.session_state.lotto_disabled = False
+
+                # 🎰 로또 추첨 진행
                 data.at[student_index, "세진코인"] -= 1
                 pool = list(range(1, 21))
                 main_balls = random.sample(pool, 3)
