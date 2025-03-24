@@ -192,7 +192,15 @@ if user_type == "교사용":
         updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
+  
+    # ✅ 사이드바에 학생 정보 표시 추가
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📌 학생 정보")
+    st.sidebar.write(f"**이름:** {selected_student}")
+    st.sidebar.write(f"**보유 코인:** {student_coins}개")
+    st.sidebar.markdown("---")
 
+    st.markdown(f"<h2>{selected_student}님의 세진코인은 {student_coins}개입니다.</h2>", unsafe_allow_html=True)
 # --- 🎒 학생용 UI --- 
 elif user_type == "학생용":
     selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
