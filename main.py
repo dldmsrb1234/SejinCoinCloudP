@@ -23,7 +23,15 @@ def connect_gsheet():
 # Google Sheets 데이터 로드
 def load_data():
     sheet = connect_gsheet()
+    # 데이터 로드 시 지연 추가
+    time.sleep(1)  # 1초 지연 (요청 초과 방지)
     return pd.DataFrame(sheet.get_all_records())
+
+def save_data(data):
+    sheet = connect_gsheet()
+    # 데이터 저장 시 지연 추가
+    time.sleep(1)  # 1초 지연 (요청 초과 방지)
+    sheet.update([data.columns.values.tolist()] + data.values.tolist())
 
 # 기록을 추가하는 함수
 def add_record(student_index, activity, reward=None, additional_info=None):
@@ -38,10 +46,7 @@ def add_record(student_index, activity, reward=None, additional_info=None):
     record_list.append(new_record)
     data.at[student_index, "기록"] = str(record_list)
 
-# 데이터 저장 함수 (구현 필요)
-def save_data(data):
-    sheet = connect_gsheet()
-    sheet.update([data.columns.values.tolist()] + data.values.tolist())
+
 
 # --- 🌟 UI 스타일 --- 
 st.markdown(
