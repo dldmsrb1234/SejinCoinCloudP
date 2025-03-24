@@ -155,7 +155,7 @@ elif user_type == "학생용":
         if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)", key="lotto_button"):
             # 4초 대기 후 로또 진행
             with st.spinner("잠시만 기다려 주세요... 로또 진행 중입니다."):
-                time.sleep(4)  # 로또 진행 대기 4초
+                  # 4초 대기
 
             if student_coins < 1:
                 st.error("세진코인이 부족하여 로또를 진행할 수 없습니다.")
@@ -171,79 +171,62 @@ elif user_type == "학생용":
                 st.write("메인 볼:", sorted(main_balls))
                 st.write("보너스 볼:", bonus_ball)
 
-                matches = set(chosen_numbers) & set(main_balls)
-                match_count = len(matches)
-
-                reward = None
-                if match_count == 3:
-                    st.success("🎉 1등 당첨! 상품: 치킨")
+                # 당첨 확인 및 보상 제공
+                if set(chosen_numbers) == set(main_balls):
                     reward = "치킨"
-                elif match_count == 2 and list(set(chosen_numbers) - matches)[0] == bonus_ball:
-                    st.success("🎉 2등 당첨! 상품: 햄버거세트")
+                    add_record(student_index, "로또 1등 당첨", reward=reward)
+                elif set(chosen_numbers) == set(main_balls[:2]) and bonus_ball in chosen_numbers:
                     reward = "햄버거세트"
-                elif match_count == 2:
-                    st.success("🎉 3등 당첨! 상품: 매점이용권")
+                    add_record(student_index, "로또 2등 당첨", reward=reward)
+                elif set(chosen_numbers) == set(main_balls[:2]):
                     reward = "매점이용권"
-                elif match_count == 1:
-                    st.success("🎉 4등 당첨! 보상: 0.5코인")
+                    add_record(student_index, "로또 3등 당첨", reward=reward)
+                elif chosen_numbers[0] in main_balls:
                     reward = "0.5코인"
-                    data.at[student_index, "세진코인"] += 0.5
+                    add_record(student_index, "로또 4등 당첨", reward=reward)
                 else:
-                    st.error("😢 아쉽게도 당첨되지 않았습니다.")
+                    reward = "꽝"
+                    add_record(student_index, "로또 꽝", reward=None)
 
-                add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
                 save_data(data)
-
-        # 최근 당첨 기록 탭
-        st.subheader(f"{selected_student}님의 최근 당첨 기록")
-        record_list = ast.literal_eval(data.at[student_index, "기록"])
-        lotto_records = [record for record in record_list if record["activity"] == "로또"]
-
-        if lotto_records:
-            for record in lotto_records:
-                st.write(f"**{record['timestamp']}**")
-                st.write(f"당첨 번호: {record['additional_info']}")
-                st.write(f"보상: {record['reward']}")
-                st.write("---")
-        else:
-            st.info("아직 당첨 기록이 없습니다.")
+                st.success(f"당첨 결과: {reward}!")
 
 # --- 📊 통계용 UI --- 
 elif user_type == "통계용":
     st.subheader("📊 로또 당첨 통계")
-    all_records = []
 
-    for _, row in data.iterrows():
+    reward_stats = {
+        "치킨": 0,
+        "햄버거세트": 0,
+        "매점이용권": 0,
+        "0.5코인": 0,
+        "꽝": 0
+    }
+
+    # 3등 이상 당첨자 목록 필터링
+    winners = data[data["기록"].str.contains("로또")]
+
+    for index, row in winners.iterrows():
         records = ast.literal_eval(row["기록"])
         for record in records:
-            if record["activity"] == "로또":
-                all_records.append({
+            if record.get("reward") in reward_stats:
+                reward_stats[record["reward"]] += 1
+
+    st.write("전체 당첨 횟수:")
+    st.write(reward_stats)
+
+    # 3등 이상 당첨자 목록 출력
+    st.write("3등 이상 당첨자 목록:")
+    winners_list = []
+    for index, row in winners.iterrows():
+        records = ast.literal_eval(row["기록"])
+        for record in records:
+            if record.get("reward") in ["치킨", "햄버거세트", "매점이용권"]:
+                winners_list.append({
                     "학생": row["학생"],
-                    "반": row["반"],
-                    "시간": record["timestamp"],
-                    "보상": record["reward"],
-                    "당첨번호": record["additional_info"]
+                    "당첨 보상": record["reward"],
+                    "당첨 날짜": record["timestamp"]
                 })
+    st.write(pd.DataFrame(winners_list))
 
-    df_records = pd.DataFrame(all_records)
-
-    if not df_records.empty:
-        # 전체 기록 표시
-        st.subheader("전체 로또 당첨 기록")
-        st.dataframe(df_records)
-
-        # 3등 이상 당첨자 필터링
-        st.subheader("🎉 3등 이상 당첨자 목록")
-        high_rewards = ["치킨", "햄버거세트", "매점이용권"]  # 3등 이상 보상 목록
-        high_reward_winners = df_records[df_records["보상"].isin(high_rewards)]
-
-        if not high_reward_winners.empty:
-            st.dataframe(high_reward_winners[["학생", "반", "시간", "보상"]])
-        else:
-            st.info("3등 이상 당첨 기록이 없습니다.")
-
-        # 당첨 횟수 통계
-        st.subheader("📈 당첨 횟수 통계")
-        st.write(df_records["보상"].value_counts())
-    else:
-        st.info("아직 로또 당첨 기록이 없습니다.")
+    st.write("로또 당첨 분석이 완료되었습니다.")
