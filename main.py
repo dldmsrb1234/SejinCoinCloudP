@@ -159,7 +159,7 @@ elif user_type == "학생용":
 
             if student_coins < 1:
                 st.error("세진코인이 부족하여 로또를 진행할 수 없습니다.")
-                time.sleep(4)
+                
             else:
                 # 로또 추첨 진행
                 data.at[student_index, "세진코인"] -= 1
