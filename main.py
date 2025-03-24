@@ -155,10 +155,11 @@ elif user_type == "학생용":
         if len(chosen_numbers) == 3 and st.button("로또 게임 시작 (1코인 차감)", key="lotto_button"):
             # 4초 대기 후 로또 진행
             with st.spinner("잠시만 기다려 주세요... 로또 진행 중입니다."):
-                time.sleep(4)  # 4초 대기
+                  # 4초 대기
 
             if student_coins < 1:
                 st.error("세진코인이 부족하여 로또를 진행할 수 없습니다.")
+                time.sleep(4)
             else:
                 # 로또 추첨 진행
                 data.at[student_index, "세진코인"] -= 1
