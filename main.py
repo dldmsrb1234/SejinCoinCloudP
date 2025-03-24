@@ -117,10 +117,46 @@ st.markdown(
 )
 
 # --- 🎓 UI 선택 --- 
-user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용", "통계용"])
+user_type = st.sidebar.radio("모드를 선택하세요", ["학생용", "교사용", "통계용", "로그 확인"])
 
 # 데이터 로드
 data = load_data()
+
+if user_type == "로그 확인"
+    # --- 📝 로그 확인 기능 추가 ---
+    st.sidebar.subheader("📜 로그 확인")
+
+    selected_class_log = st.sidebar.selectbox("🔍 로그 확인용 반 선택:", data["반"].unique(), key="log_class")
+    filtered_data_log = data[data["반"] == selected_class_log]
+    selected_student_log = st.sidebar.selectbox("🔍 로그 확인용 학생 선택:", filtered_data_log["학생"].tolist(), key="log_student")
+
+    # 선택한 학생의 로그 불러오기
+    student_index_log = data[(data["반"] == selected_class_log) & (data["학생"] == selected_student_log)].index[0]
+    student_logs = ast.literal_eval(data.at[student_index_log, "기록"])
+
+    st.subheader(f"{selected_student_log}의 활동 로그")
+
+    for log in student_logs:
+        timestamp = log["timestamp"]
+        activity = log["activity"]
+        reward = log.get("reward", "")
+        additional_info = log.get("additional_info", "")
+    
+        log_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+        log_hour = log_time.hour
+
+        log_text = f"🕒 {timestamp} - {activity}"
+        if reward:
+            log_text += f" (보상: {reward})"
+        if additional_info:
+            log_text += f" [{additional_info}]"
+
+        # 오후 5시 이후 "세진코인 변경" 로그는 빨간색으로 표시
+        if activity == "세진코인 변경" and log_hour >= 17:
+            st.markdown(f"<span style='color:red;'>{log_text}</span>", unsafe_allow_html=True)
+        else:
+            st.write(log_text)
+
 
 # --- 🎓 교사용 UI ---
 if user_type == "교사용":
