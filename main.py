@@ -180,29 +180,20 @@ if user_type == "교사용":
                 else:
                     st.warning(f"{selected_student}에게서 세진코인 {-coin_amount}개를 회수했습니다!")
 
-        # 세진코인 초기화
-        if st.button("⚠️ 세진코인 초기화"):
-            
-            data.at[student_index, "세진코인"] = 0
-            data.at[student_index, "기록"] = "[]"
-            add_record(student_index, "세진코인 초기화", reward=None, additional_info="세진코인 및 기록 초기화")
-            save_data(data)
-            st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
-
-        # **학생 비밀번호 변경 기능 추가**
+        # **학생 비밀번호 변경 기능 (공백 입력도 허용)**
         st.subheader(f"🔑 {selected_student}의 비밀번호 변경")
         new_password = st.text_input("새로운 비밀번호 입력:", type="password")  # 버튼 외부에서 먼저 정의
 
         if st.button("비밀번호 변경"):
-            
-              data.at[student_index, "비밀번호"] = new_password
-              save_data(data)
-                st.success(f"{selected_student}의 비밀번호가 성공적으로 변경되었습니다!")
-            
+            # 공백 입력도 허용하므로 조건 제거
+            data.at[student_index, "비밀번호"] = new_password
+            save_data(data)
+            st.success(f"{selected_student}의 비밀번호가 성공적으로 변경되었습니다!")
 
         updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
+
    
     student_coins = int(data.at[student_index, "세진코인"])  
     # ✅ 사이드바에 학생 정보 표시 추가
