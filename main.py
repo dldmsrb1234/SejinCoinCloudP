@@ -193,6 +193,8 @@ if user_type == "교사용":
 
     
         if st.button("⚠️ 전체 학생 세진코인 초기화"):
+        # **전체 초기화 버튼 추가**
+        if st.button("⚠️ 전체 학생 세진코인 초기화"):
             # 경고 창 표시
             confirm = st.radio(
                 "⚠️ 이 작업은 되돌릴 수 없습니다. 모든 학생의 세진코인과 기록을 초기화하시겠습니까?",
@@ -209,6 +211,8 @@ if user_type == "교사용":
                 st.success(f"{selected_class} 반의 모든 학생의 세진코인과 기록이 초기화되었습니다.")
             elif confirm == "아니요":
                 st.warning("세진코인 초기화를 취소했습니다.")
+
+        
 
         updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
