@@ -194,12 +194,11 @@ if user_type == "교사용":
         new_password = st.text_input("새로운 비밀번호 입력:", type="password")  # 버튼 외부에서 먼저 정의
 
         if st.button("비밀번호 변경"):
-            if new_password.strip():  # 공백 입력 방지
-                data.at[student_index, "비밀번호"] = new_password
-                save_data(data)
+            
+              data.at[student_index, "비밀번호"] = new_password
+              save_data(data)
                 st.success(f"{selected_student}의 비밀번호가 성공적으로 변경되었습니다!")
-            else:
-                st.error("새로운 비밀번호를 입력하세요.")
+            
 
         updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
