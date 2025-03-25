@@ -182,24 +182,17 @@ if user_type == "교사용":
 
         # 세진코인 초기화
         if st.button("⚠️ 세진코인 초기화"):
-            confirm = st.radio(
-                "⚠️ 이 작업은 되돌릴 수 없습니다. 모든 학생의 세진코인과 기록을 초기화하시겠습니까?",
-                ["창 닫기", "예", "아니요"])
-                if confirm == "예":
-                    data.at[student_index, "세진코인"] = 0
-                    data.at[student_index, "기록"] = "[]"
-                    add_record(student_index, "세진코인 초기화", reward=None, additional_info="세진코인 및 기록 초기화")
-                save_data(data)
-                st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
             
-                elif confirm == "아니요":
-                st.warning("세진코인 초기화를 취소했습니다.")
-   
+            data.at[student_index, "세진코인"] = 0
+            data.at[student_index, "기록"] = "[]"
+            add_record(student_index, "세진코인 초기화", reward=None, additional_info="세진코인 및 기록 초기화")
+            save_data(data)
+            st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
 
         updated_student_data = data.loc[[student_index]].drop(columns=["비밀번호"])
         st.subheader(f"{selected_student}의 업데이트된 세진코인")
         st.dataframe(updated_student_data)
-    
+   
     student_coins = int(data.at[student_index, "세진코인"])  
     # ✅ 사이드바에 학생 정보 표시 추가
     st.sidebar.markdown("---")
