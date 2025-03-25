@@ -184,8 +184,7 @@ if user_type == "교사용":
         if st.button("⚠️ 세진코인 초기화"):
             confirm = st.radio(
                 "⚠️ 이 작업은 되돌릴 수 없습니다. 모든 학생의 세진코인과 기록을 초기화하시겠습니까?",
-                ["창 닫기", "예", "아니요"]
-            )
+                ["창 닫기", "예", "아니요"])
                 if confirm == "예":
                     data.at[student_index, "세진코인"] = 0
                     data.at[student_index, "기록"] = "[]"
