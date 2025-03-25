@@ -190,9 +190,6 @@ if user_type == "교사용":
             st.error(f"{selected_student}의 세진코인이 초기화되었습니다.")
 
         
-
-    
-        if st.button("⚠️ 전체 학생 세진코인 초기화"):
         # **전체 초기화 버튼 추가**
         if st.button("⚠️ 전체 학생 세진코인 초기화"):
             # 경고 창 표시
