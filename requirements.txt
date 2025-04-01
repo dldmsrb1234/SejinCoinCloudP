@@ -8,3 +8,4 @@ bcrypt
 firebase_admin
 google-cloud-firestore
 gspread
+filelock
