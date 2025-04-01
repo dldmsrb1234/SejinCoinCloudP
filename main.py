@@ -328,7 +328,7 @@ elif user_type == "학생용":
             if match_count == 3:
                 st.success("🎉 1등 당첨! 상품: 치킨")
                 reward = "치킨"
-                elif match_count == 2:
+            elif match_count == 2:
                 bonus_placeholder = st.empty()
                 for k in range(10, 0, -1):
                     bonus_placeholder.markdown(f"**보너스 공 추첨까지 {k}초 남음...**")
@@ -359,13 +359,15 @@ elif user_type == "학생용":
             add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
             save_data(data)
             st.success(f"당첨 결과: {reward}!")
-            st.session_state["drawing"] = false
+            st.session_state["drawing"] = False
         student_coins = float(data.at[student_index, "세진코인"])
         st.sidebar.markdown("---")
         st.sidebar.subheader("📌 학생 정보")
         st.sidebar.write(f"**이름:** {selected_student}")
         st.sidebar.write(f"**보유 코인:** {student_coins:.1f}개")
         st.sidebar.markdown("---")
+
+
         
 
 # --- 통계용 UI ---
