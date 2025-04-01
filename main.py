@@ -296,7 +296,8 @@ if password == str(data.at[student_index, "비밀번호"]):
             f"<span style='background-color:red; color:white; font-size:150%; padding:4px;'>선택한 번호: {chosen_str}</span>",
             unsafe_allow_html=True
         )
-
+    if st.button("선택한 번호 초기화"):
+        reset_numbers()
     # 로또 시작 전, 버튼 클릭 시 최신 잔액 확인 후 1코인 차감
     def start_lotto():
         current_coins = float(data.at[student_index, "세진코인"])
