@@ -8,6 +8,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import os
 import pickle
+from filelock import FileLock
 
 # --- Google Sheets API 연결 ---
 def connect_gsheet():
@@ -23,16 +24,21 @@ def connect_gsheet():
 # 캐시된 데이터를 로드하는 함수
 def load_data_from_cache():
     cache_file = "data_cache.pkl"
-    if os.path.exists(cache_file):
-        with open(cache_file, "rb") as f:
-            return pickle.load(f)
-    else:
-        return None
+    lock = FileLock(cache_file + ".lock")
+    with lock:
+        if os.path.exists(cache_file):
+            with open(cache_file, "rb") as f:
+                return pickle.load(f)
+        else:
+            return None
 
 # 캐시된 데이터를 저장하는 함수
 def save_data_to_cache(data):
-    with open("data_cache.pkl", "wb") as f:
-        pickle.dump(data, f)
+    cache_file = "data_cache.pkl"
+    lock = FileLock(cache_file + ".lock")
+    with lock:
+        with open(cache_file, "wb") as f:
+            pickle.dump(data, f)
 
 # Google Sheets 데이터 로드
 def load_data():
@@ -322,7 +328,7 @@ elif user_type == "학생용":
             if match_count == 3:
                 st.success("🎉 1등 당첨! 상품: 치킨")
                 reward = "치킨"
-            elif match_count == 2:
+                        elif match_count == 2:
                 bonus_placeholder = st.empty()
                 for k in range(10, 0, -1):
                     bonus_placeholder.markdown(f"**보너스 공 추첨까지 {k}초 남음...**")
