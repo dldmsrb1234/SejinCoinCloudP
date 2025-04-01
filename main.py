@@ -366,6 +366,7 @@ elif user_type == "학생용":
         st.sidebar.write(f"**이름:** {selected_student}")
         st.sidebar.write(f"**보유 코인:** {student_coins:.1f}개")
         st.sidebar.markdown("---")
+        enabled=st.session_state.get("drawing", true)
 
 # --- 통계용 UI ---
 elif user_type == "통계용":
@@ -395,7 +396,7 @@ elif user_type == "통계용":
                     "당첨 보상": record["reward"],
                     "당첨 날짜": record["timestamp"]
                 })
-                st.session_state["drawing"] = false
+                
     st.write(pd.DataFrame(winners_list))
     st.write("로또 당첨 분석이 완료되었습니다.")
 
