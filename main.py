@@ -395,6 +395,7 @@ elif user_type == "통계용":
                     "당첨 보상": record["reward"],
                     "당첨 날짜": record["timestamp"]
                 })
+                st.session_state["drawing"] = false
     st.write(pd.DataFrame(winners_list))
     st.write("로또 당첨 분석이 완료되었습니다.")
 
