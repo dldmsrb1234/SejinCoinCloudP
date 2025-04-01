@@ -328,7 +328,7 @@ elif user_type == "학생용":
             if match_count == 3:
                 st.success("🎉 1등 당첨! 상품: 치킨")
                 reward = "치킨"
-                        elif match_count == 2:
+                elif match_count == 2:
                 bonus_placeholder = st.empty()
                 for k in range(10, 0, -1):
                     bonus_placeholder.markdown(f"**보너스 공 추첨까지 {k}초 남음...**")
