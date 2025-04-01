@@ -280,6 +280,9 @@ if password == str(data.at[student_index, "비밀번호"]):
     def choose_number(number):
         if len(st.session_state["chosen_numbers"]) < 3:
             st.session_state["chosen_numbers"].append(number)
+
+    def reset_numbers():
+        st.session_state["chosen_numbers"] = []
     
     if len(st.session_state["chosen_numbers"]) < 3:
         chosen_numbers = st.multiselect(
