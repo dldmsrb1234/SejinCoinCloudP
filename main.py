@@ -253,143 +253,120 @@ if user_type == "교사용":
     )
 
 # --- 학생용 UI ---
-# --- 학생용 UI ---
-selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
-filtered_data = data[data["반"] == selected_class]
-selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
-student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
-student_coins = float(data.at[student_index, "세진코인"])
-st.markdown(
-    f"<h2 style='background-color: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 8px;'>"
-    f"{selected_student}님의 세진코인은 {student_coins:.1f}개입니다."
-    f"</h2>",
-    unsafe_allow_html=True
-)
-
-password = st.text_input("비밀번호를 입력하세요:", type="password")
-if password == str(data.at[student_index, "비밀번호"]):
-    # 학생이 비밀번호 입력 시 로컬 BGM 재생
-    st.audio("bgm.mp3", format="audio/mp3")
+elif user_type == "학생용":
+    selected_class = st.selectbox("반을 선택하세요:", data["반"].unique())
+    filtered_data = data[data["반"] == selected_class]
+    selected_student = st.selectbox("학생을 선택하세요:", filtered_data["학생"].tolist())
+    student_index = data[(data["반"] == selected_class) & (data["학생"] == selected_student)].index[0]
+    student_coins = float(data.at[student_index, "세진코인"])
     st.markdown(
-        "<h2 style='background-color: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 8px;'>🎰 세진코인 로또 게임 (1코인 차감)</h2>",
+        f"<h2 style='background-color: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 8px;'>"
+        f"{selected_student}님의 세진코인은 {student_coins:.1f}개입니다."
+        f"</h2>",
         unsafe_allow_html=True
     )
-    if "chosen_numbers" not in st.session_state:
-        st.session_state["chosen_numbers"] = []
 
-    def choose_number(number):
-        if len(st.session_state["chosen_numbers"]) < 3:
-            st.session_state["chosen_numbers"].append(number)
-
-    def reset_numbers():
-        st.session_state["chosen_numbers"] = []
-    
-    if len(st.session_state["chosen_numbers"]) < 3:
-        chosen_numbers = st.multiselect(
-            "1부터 20까지 숫자 중 **3개**를 선택하세요:", 
-            list(range(1, 21)), 
-            default=st.session_state["chosen_numbers"]
-        )
-        for n in chosen_numbers:
-            choose_number(n)
-    
-    if st.session_state["chosen_numbers"]:
-        chosen_str = ", ".join(map(str, st.session_state["chosen_numbers"]))
+    password = st.text_input("비밀번호를 입력하세요:", type="password")
+    if password == str(data.at[student_index, "비밀번호"]):
+        # 학생이 비밀번호 입력 시 로컬 BGM 재생
+        st.audio("bgm.mp3", format="audio/mp3")
         st.markdown(
-            f"<span style='background-color:red; color:white; font-size:150%; padding:4px;'>선택한 번호: {chosen_str}</span>",
+            "<h2 style='background-color: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 8px;'>🎰 세진코인 로또 게임 (1코인 차감)</h2>",
             unsafe_allow_html=True
         )
-    if st.button("선택한 번호 초기화", on_click=reset_numbers, disabled=st.session_state.get("drawing", False)):
-        reset_numbers()
-    # 로또 시작 전, 버튼 클릭 시 최신 잔액 확인 후 1코인 차감
-    def start_lotto():
-        current_coins = float(data.at[student_index, "세진코인"])
-        if current_coins < 1:
-            st.error("세진코인이 부족하여 로또를 진행할 수 없습니다.")
-            st.session_state["drawing"] = False
-        else:
-            data.at[student_index, "세진코인"] = current_coins - 1
-            save_data(data)
-            st.session_state["drawing"] = True
-
-    if len(st.session_state["chosen_numbers"]) == 3 and st.button(
-        "로또 게임 시작 (1코인 차감)",
-        key="lotto_button",
-        disabled=st.session_state.get("drawing", False),
-        on_click=start_lotto
-    ):
-        pass
-
-    if st.session_state.get("drawing", False):
-        # 초기 딜레이: 7초, 새 로딩 GIF 사용
-        countdown_placeholder = st.empty()
-        loading_image = "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjNmaDVzbTlrYWJrMXZzMGZkam5tOWc5OHQ5eDBhYm94OWxzN2hnZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/APqEbxBsVlkWSuFpth/giphy.gif"
-        for i in range(7, 0, -1):
-            countdown_placeholder.markdown(f"**로또 추첨까지 {i}초 남음...**")
-            countdown_placeholder.image(loading_image, width=200)
-            time.sleep(1)
-        countdown_placeholder.empty()
-        pool = list(range(1, 21))
-        main_balls = random.sample(pool, 3)
-        main_ball_gif = "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExazYzZXp0azhvdjF1M3BtM3JobjVic2Y3ZWIyaTh4ZXpkNDNwdDZtdSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/dvgefaMHmaN2g/giphy.gif"
-        mapping = {1: "첫번째", 2: "두번째", 3: "세번째"}
-        for idx, ball in enumerate(main_balls, start=1):
-            ball_placeholder = st.empty()
-            ball_placeholder.image(main_ball_gif, width=200)
-            time.sleep(3)
-            ball_placeholder.markdown(
-                f"<span style='font-size:300%; background-color:red; color:white;'>{mapping[idx]} 공: {ball}</span> :tada:",
+        chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)), disabled=st.session_state.get("drawing", False))
+        # 선택한 번호 출력: 빨간색 배경, 흰색 텍스트, 글자 크기 150%
+        if chosen_numbers:
+            chosen_str = ", ".join(map(str, chosen_numbers))
+            st.markdown(
+                f"<span style='background-color:red; color:white; font-size:150%; padding:4px;'>선택한 번호: {chosen_str}</span>",
                 unsafe_allow_html=True
             )
-        matches = set(st.session_state["chosen_numbers"]) & set(main_balls)
-        match_count = len(matches)
-        reward = None
-        if match_count == 3:
-            st.success("🎉 1등 당첨! 상품: 치킨")
-            reward = "치킨"
-        elif match_count == 2:
-            bonus_placeholder = st.empty()
-            for k in range(10, 0, -1):
-                bonus_placeholder.markdown(f"**보너스 공 추첨까지 {k}초 남음...**")
-                time.sleep(1)
-            bonus_placeholder.empty()
-            bonus_ball_gif = main_ball_gif
-            bonus_placeholder = st.empty()
-            bonus_placeholder.image(bonus_ball_gif, width=200)
-            time.sleep(3)
-            bonus_ball = random.choice([n for n in pool if n not in main_balls])
-            bonus_placeholder.markdown(
-                f"<span style='font-size:300%; background-color:red; color:white;'>보너스 공: {bonus_ball}</span> :sparkles:",
-                unsafe_allow_html=True
-            )
-            remaining_number = list(set(st.session_state["chosen_numbers"]) - matches)[0]
-            if remaining_number == bonus_ball:
-                st.success("🎉 2등 당첨! 상품: 햄버거세트")
-                reward = "햄버거세트"
+        # 로또 시작 전, 버튼 클릭 시 최신 잔액 확인 후 1코인 차감
+        def start_lotto():
+            current_coins = float(data.at[student_index, "세진코인"])
+            if current_coins < 1:
+                st.error("세진코인이 부족하여 로또를 진행할 수 없습니다.")
+                st.session_state["drawing"] = False
             else:
-                st.success("🎉 3등 당첨! 상품: 매점이용권")
-                reward = "매점이용권"
-       
-        elif match_count == 1:
-            st.success("🎉 4등 당첨! 보상: 0.5코인")
-            reward = "0.5코인"
-            data.at[student_index, "세진코인"] += 0.5
-        else:
-            st.error("😢 아쉽게도 당첨되지 않았습니다.")
-        add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
-        save_data(data)
-        st.success(f"당첨 결과: {reward}!")
-        st.session_state["drawing"] = False
+                data.at[student_index, "세진코인"] = current_coins - 1
+                save_data(data)
+                st.session_state["drawing"] = True
+
+        if len(chosen_numbers) == 3 and st.button(
+            "로또 게임 시작 (1코인 차감)",
+            key="lotto_button",
+            disabled=st.session_state.get("drawing", False),
+            on_click=start_lotto
+        ):
+            pass
+
+        if st.session_state.get("drawing", False):
+            # 초기 딜레이: 7초, 새 로딩 GIF 사용
+            countdown_placeholder = st.empty()
+            loading_image = "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjNmaDVzbTlrYWJrMXZzMGZkam5tOWc5OHQ5eDBhYm94OWxzN2hnZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/APqEbxBsVlkWSuFpth/giphy.gif"
+            for i in range(7, 0, -1):
+                countdown_placeholder.markdown(f"**로또 추첨까지 {i}초 남음...**")
+                countdown_placeholder.image(loading_image, width=200)
+                time.sleep(1)
+            countdown_placeholder.empty()
+            pool = list(range(1, 21))
+            main_balls = random.sample(pool, 3)
+            main_ball_gif = "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExazYzZXp0azhvdjF1M3BtM3JobjVic2Y3ZWIyaTh4ZXpkNDNwdDZtdSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/dvgefaMHmaN2g/giphy.gif"
+            mapping = {1: "첫번째", 2: "두번째", 3: "세번째"}
+            for idx, ball in enumerate(main_balls, start=1):
+                ball_placeholder = st.empty()
+                ball_placeholder.image(main_ball_gif, width=200)
+                time.sleep(3)
+                ball_placeholder.markdown(
+                    f"<span style='font-size:300%; background-color:red; color:white;'>{mapping[idx]} 공: {ball}</span> :tada:",
+                    unsafe_allow_html=True
+                )
+            matches = set(chosen_numbers) & set(main_balls)
+            match_count = len(matches)
+            reward = None
+            if match_count == 3:
+                st.success("🎉 1등 당첨! 상품: 치킨")
+                reward = "치킨"
+                        elif match_count == 2:
+                bonus_placeholder = st.empty()
+                for k in range(10, 0, -1):
+                    bonus_placeholder.markdown(f"**보너스 공 추첨까지 {k}초 남음...**")
+                    time.sleep(1)
+                bonus_placeholder.empty()
+                bonus_ball_gif = main_ball_gif
+                bonus_placeholder = st.empty()
+                bonus_placeholder.image(bonus_ball_gif, width=200)
+                time.sleep(3)
+                bonus_ball = random.choice([n for n in pool if n not in main_balls])
+                bonus_placeholder.markdown(
+                    f"<span style='font-size:300%; background-color:red; color:white;'>보너스 공: {bonus_ball}</span> :sparkles:",
+                    unsafe_allow_html=True
+                )
+                remaining_number = list(set(chosen_numbers) - matches)[0]
+                if remaining_number == bonus_ball:
+                    st.success("🎉 2등 당첨! 상품: 햄버거세트")
+                    reward = "햄버거세트"
+                else:
+                    st.success("🎉 3등 당첨! 상품: 매점이용권")
+                    reward = "매점이용권"
+            elif match_count == 1:
+                st.success("🎉 4등 당첨! 보상: 0.5코인")
+                reward = "0.5코인"
+                data.at[student_index, "세진코인"] += 0.5
+            else:
+                st.error("😢 아쉽게도 당첨되지 않았습니다.")
+            add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
+            save_data(data)
+            st.success(f"당첨 결과: {reward}!")
+            st.session_state["drawing"] = False
         student_coins = float(data.at[student_index, "세진코인"])
         st.sidebar.markdown("---")
         st.sidebar.subheader("📌 학생 정보")
         st.sidebar.write(f"**이름:** {selected_student}")
         st.sidebar.write(f"**보유 코인:** {student_coins:.1f}개")
         st.sidebar.markdown("---")
-
-
-
-        
+        enabled=st.session_state.get("drawing", true)
 
 # --- 통계용 UI ---
 elif user_type == "통계용":
