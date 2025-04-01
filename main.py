@@ -370,12 +370,12 @@ if password == str(data.at[student_index, "비밀번호"]):
             st.success("🎉 4등 당첨! 보상: 0.5코인")
             reward = "0.5코인"
             data.at[student_index, "세진코인"] += 0.5
-            else:
-                st.error("😢 아쉽게도 당첨되지 않았습니다.")
-            add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
-            save_data(data)
-            st.success(f"당첨 결과: {reward}!")
-            st.session_state["drawing"] = False
+        else:
+            st.error("😢 아쉽게도 당첨되지 않았습니다.")
+        add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
+        save_data(data)
+        st.success(f"당첨 결과: {reward}!")
+        st.session_state["drawing"] = False
         student_coins = float(data.at[student_index, "세진코인"])
         st.sidebar.markdown("---")
         st.sidebar.subheader("📌 학생 정보")
