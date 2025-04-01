@@ -359,14 +359,14 @@ elif user_type == "학생용":
             add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
             save_data(data)
             st.success(f"당첨 결과: {reward}!")
-            st.session_state["drawing"] = False
+            st.session_state["drawing"] = true
         student_coins = float(data.at[student_index, "세진코인"])
         st.sidebar.markdown("---")
         st.sidebar.subheader("📌 학생 정보")
         st.sidebar.write(f"**이름:** {selected_student}")
         st.sidebar.write(f"**보유 코인:** {student_coins:.1f}개")
         st.sidebar.markdown("---")
-        enabled=st.session_state.get("drawing", true)
+        
 
 # --- 통계용 UI ---
 elif user_type == "통계용":
