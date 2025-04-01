@@ -268,7 +268,7 @@ elif user_type == "학생용":
             "<h2 style='background-color: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 8px;'>🎰 세진코인 로또 게임 (1코인 차감)</h2>",
             unsafe_allow_html=True
         )
-        chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
+        chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)), disabled=st.session_state.get("drawing", False))
         # 선택한 번호 출력: 빨간색 배경, 흰색 텍스트, 글자 크기 150%
         if chosen_numbers:
             chosen_str = ", ".join(map(str, chosen_numbers))
@@ -346,50 +346,4 @@ elif user_type == "학생용":
                     reward = "매점이용권"
             elif match_count == 1:
                 st.success("🎉 4등 당첨! 보상: 0.5코인")
-                reward = "0.5코인"
-                data.at[student_index, "세진코인"] += 0.5
-            else:
-                st.error("😢 아쉽게도 당첨되지 않았습니다.")
-            add_record(student_index, "로또", reward, f"당첨번호: {main_balls}")
-            save_data(data)
-            st.success(f"당첨 결과: {reward}!")
-            st.session_state["drawing"] = False
-        student_coins = float(data.at[student_index, "세진코인"])
-        st.sidebar.markdown("---")
-        st.sidebar.subheader("📌 학생 정보")
-        st.sidebar.write(f"**이름:** {selected_student}")
-        st.sidebar.write(f"**보유 코인:** {student_coins:.1f}개")
-        st.sidebar.markdown("---")
-
-# --- 통계용 UI ---
-elif user_type == "통계용":
-    st.subheader("📊 로또 당첨 통계")
-    reward_stats = {
-        "치킨": 0,
-        "햄버거세트": 0,
-        "매점이용권": 0,
-        "0.5코인": 0
-    }
-    winners = data[data["기록"].str.contains("로또")]
-    for index, row in winners.iterrows():
-        records = ast.literal_eval(row["기록"])
-        for record in records:
-            if record.get("reward") in reward_stats:
-                reward_stats[record["reward"]] += 1
-    st.write("전체 당첨 횟수:")
-    st.write(reward_stats)
-    st.write("3등 이상 당첨자 목록:")
-    winners_list = []
-    for index, row in winners.iterrows():
-        records = ast.literal_eval(row["기록"])
-        for record in records:
-            if record.get("reward") in ["치킨", "햄버거세트", "매점이용권"]:
-                winners_list.append({
-                    "학생": row["학생"],
-                    "당첨 보상": record["reward"],
-                    "당첨 날짜": record["timestamp"]
-                })
-    st.write(pd.DataFrame(winners_list))
-    st.write("로또 당첨 분석이 완료되었습니다.")
-
-st.markdown('</div>', unsafe_allow_html=True)
+                reward = "0.5
