@@ -82,6 +82,10 @@ def load_student_lotto_status(class_name, student_name, date_str):
         return list(map(int, row.iloc[0]["번호"].split(',')))
     return None
 
+def get_class_list():
+    sheet = get_worksheet("학생정보")
+    class_col = sheet.col_values(1)[1:]  # 첫 번째 열 (1열): 반 이름
+    return sorted(list(set(class_col)))
 
 
 def get_student_list(class_name):
