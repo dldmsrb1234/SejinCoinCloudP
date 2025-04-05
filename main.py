@@ -280,92 +280,123 @@ if user_type == "교사용":
 
 # --- 학생용 UI ---
 elif user_type == "학생용":
-    st.title("🎲 세진코인 로또 - 학생용 페이지")
-    selected_class = st.selectbox("반을 선택하세요", get_class_list())
-    selected_student = st.selectbox("이름을 선택하세요", get_student_list(selected_class))
+    st.header("🎓 학생용 페이지")
 
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    current_coin = get_coin_balance(selected_class, selected_student)
-
-    st.markdown(f"**현재 코인:** {current_coin}개")
-
-    # 🔐 비밀번호 확인
+    # 1. 반, 학생 선택
+    student_class = st.selectbox("반을 선택하세요", options=class_list, key="student_class")
+    student_name = st.selectbox("이름을 선택하세요", options=get_student_list(student_class), key="student_name")
+    
+    # 2. 비밀번호 입력
     password_input = st.text_input("비밀번호를 입력하세요", type="password")
-    student_password = get_student_password(selected_class, selected_student)
 
-    if password_input != student_password:
-        st.warning("비밀번호를 입력해야 로또를 진행할 수 있습니다.")
+    # 학생 정보 가져오기
+    student_info = get_student_info(student_class, student_name)
+
+    if student_info is None:
+        st.warning("학생 정보를 불러올 수 없습니다.")
+        st.stop()
+
+    # 비밀번호 확인
+    correct_password = student_info.get("비밀번호", "")
+    if password_input != correct_password:
+        st.info("비밀번호가 일치해야 로또 UI를 볼 수 있습니다.")
+        st.stop()
+
+    # 로또 UI 진입
+    st.success("비밀번호 확인 완료! 로또를 시작하세요 🎉")
+
+    # 날짜 및 키
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    student_key = f"{today}_{student_class}_{student_name}"
+
+    # 상태 초기화
+    if "selected_numbers" not in st.session_state:
+        st.session_state.selected_numbers = []
+    if "lotto_animating" not in st.session_state:
+        st.session_state.lotto_animating = False
+
+    # 번호 선택
+    st.subheader("1~20 중에서 숫자 3개를 선택하세요")
+
+    if st.session_state.lotto_animating:
+        st.info("추첨 중입니다. 번호를 선택할 수 없습니다.")
     else:
-        # 🎯 번호 고정 여부 확인
-        fixed_numbers = load_student_lotto_status(selected_class, selected_student, today_str)
+        cols = st.columns(5)
+        for i in range(1, 21):
+            col = cols[(i - 1) % 5]
+            if col.button(str(i), key=f"lotto_num_{i}"):
+                if i in st.session_state.selected_numbers:
+                    st.session_state.selected_numbers.remove(i)
+                elif len(st.session_state.selected_numbers) < 3:
+                    st.session_state.selected_numbers.append(i)
 
-        if fixed_numbers:
-            st.success(f"오늘 이미 로또를 진행했습니다. 고정된 번호: {fixed_numbers}")
+    st.write("선택한 번호:", st.session_state.selected_numbers)
+
+    # 추첨 버튼
+    if st.button("🎰 로또 추첨 시작"):
+        if len(st.session_state.selected_numbers) != 3:
+            st.warning("숫자 3개를 정확히 선택해주세요.")
+        elif st.session_state.lotto_animating:
+            st.info("이미 추첨이 진행 중입니다.")
         else:
-            selected_numbers = st.multiselect("1~20 중 3개의 번호를 선택하세요", list(range(1, 21)))
-
-            if len(selected_numbers) != 3:
-                st.warning("정확히 3개의 숫자를 선택해야 합니다.")
+            current_coin = student_info.get("코인", 0)
+            if current_coin < 1:
+                st.error("세진코인이 부족합니다. 로또를 진행할 수 없습니다.")
             else:
-                start_lotto = st.button("✨ 로또 시작하기")
-                if start_lotto:
-                    if current_coin < 1:
-                        st.error("코인이 부족합니다. 로또를 시작할 수 없습니다.")
-                    else:
-                        # ✅ 코인 1개 차감 및 로그 기록
-                        update_coin_balance(selected_class, selected_student, -1)
-                        log_activity(selected_class, selected_student, "로또 시작", "-1코인 차감")
+                # 코인 차감
+                new_coin = current_coin - 1
+                student_cell = students_sheet.find(student_name)
+                students_sheet.update_cell(student_cell.row, student_cell.col + 2, new_coin)  # '코인' 열은 +2번째
 
-                        # ✅ 번호 고정 및 상태 저장
-                        save_student_lotto_status(selected_class, selected_student, today_str, selected_numbers)
+                st.success(f"세진코인 1개 차감! 남은 코인: {new_coin}개")
 
-                        st.success(f"로또를 시작합니다! 선택한 번호는 고정됩니다: {selected_numbers}")
-                        st.image("https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif", use_column_width=True)
+                st.session_state.lotto_animating = True
+                with st.spinner("로또 추첨 중..."):
+                    time.sleep(3)
 
-                        # 🎰 로또 번호 추첨
-                        lotto_numbers = random.sample(range(1, 21), 4)
-                        main_numbers = lotto_numbers[:3]
-                        bonus_number = lotto_numbers[3]
+                # 당첨 번호 및 보너스
+                winning_numbers = random.sample(range(1, 21), 3)
+                bonus = random.choice([n for n in range(1, 21) if n not in winning_numbers])
+                st.success(f"당첨 번호: {winning_numbers}, 보너스: {bonus}")
 
-                        # 🎯 등수 계산
-                        matched = set(selected_numbers) & set(main_numbers)
-                        match_count = len(matched)
-                        result = "꽝"
-                        reward = ""
-                        if match_count == 3:
-                            result = "1등 (치킨)"
-                            reward = "치킨"
-                        elif match_count == 2 and bonus_number in selected_numbers:
-                            result = "2등 (햄버거세트)"
-                            reward = "햄버거세트"
-                        elif match_count == 2:
-                            result = "3등 (매점이용권)"
-                            reward = "매점이용권"
-                        elif match_count == 1:
-                            result = "4등 (0.5코인)"
-                            reward = "0.5코인"
-                            update_coin_balance(selected_class, selected_student, 0.5)
-                        else:
-                            reward = "없음"
+                # 결과 판정
+                selected = st.session_state.selected_numbers
+                match = len(set(selected) & set(winning_numbers))
+                bonus_match = bonus in selected
 
-                        # 💾 당첨 기록 저장
-                        save_lotto_result(selected_class, selected_student, today_str, selected_numbers, main_numbers, bonus_number, result)
+                if match == 3:
+                    result = "🎉 1등 (치킨)"
+                elif match == 2 and bonus_match:
+                    result = "🥳 2등 (햄버거세트)"
+                elif match == 2:
+                    result = "😊 3등 (매점이용권)"
+                elif match == 1:
+                    result = "😅 4등 (0.5코인)"
+                else:
+                    result = "😭 꽝"
 
-                        # 📝 보상 로그
-                        if reward != "없음":
-                            log_activity(selected_class, selected_student, f"로또 당첨 ({result})", f"보상: {reward}")
+                st.subheader(f"결과: {result}")
 
-                        st.markdown(f"""
-                        ### 🎉 결과
-                        - **당첨 번호:** {main_numbers} + 보너스 {bonus_number}
-                        - **당신의 선택:** {selected_numbers}
-                        - **일치 수:** {match_count}
-                        - **당첨 결과:** 🏆 {result}
-                        - **보상:** {reward}
-                        """)
-                        st.balloons()
+                # 기록 저장
+                lotto_cache = load_lotto_cache()
+                cache_key = f"{student_key}_{datetime.datetime.now().strftime('%H%M%S')}"
+                lotto_cache[cache_key] = {
+                    "class": student_class,
+                    "name": student_name,
+                    "selected": selected,
+                    "winning": winning_numbers,
+                    "bonus": bonus,
+                    "result": result,
+                    "date": today
+                }
+                save_lotto_cache(lotto_cache)
 
-    st.sidebar.markdown("---")
+                # 구글 시트 기록
+                add_lotto_log(student_class, student_name, selected, winning_numbers, bonus, result, today)
+
+                # 상태 초기화
+                st.session_state.selected_numbers = []
+                st.session_state.lotto_animating = False
 
         
        
