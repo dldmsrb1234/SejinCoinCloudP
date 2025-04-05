@@ -82,6 +82,14 @@ def load_student_lotto_status(class_name, student_name, date_str):
         return list(map(int, row.iloc[0]["번호"].split(',')))
     return None
 
+
+
+def get_student_list(class_name):
+    sheet = get_worksheet("학생정보")
+    records = sheet.get_all_records()
+    students = [row["이름"] for row in records if row["반"] == class_name]
+    return students
+
 # --- BGM 재생: 학생 비밀번호 입력 시 재생 (로컬 파일 "bgm.mp3") ---
 def render_bgm():
     return """
