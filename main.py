@@ -297,6 +297,7 @@ elif user_type == "학생용":
 
         if st.session_state.get("drawing", False):
             # 초기 딜레이: 7초, 새 로딩 GIF 사용
+            st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", options, disabled=True)
             countdown_placeholder = st.empty()
             loading_image = "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjNmaDVzbTlrYWJrMXZzMGZkam5tOWc5OHQ5eDBhYm94OWxzN2hnZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/APqEbxBsVlkWSuFpth/giphy.gif"
             for i in range(7, 0, -1):
