@@ -20,6 +20,16 @@ def connect_gsheet():
     sheet = client.open_by_url(sheet_url).sheet1
     return sheet
 
+def get_worksheet():
+    creds = Credentials.from_service_account_info(
+        st.secrets["Drive"],
+        scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    )
+    client = gspread.authorize(creds)
+    sheet_url = st.secrets["general"]["spreadsheet"]
+    sheet = client.open_by_url(sheet_url).sheet1
+    return sheet
+
 # 캐시된 데이터를 로드하는 함수
 def load_data_from_cache():
     cache_file = "data_cache.pkl"
