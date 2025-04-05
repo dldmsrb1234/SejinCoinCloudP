@@ -8,7 +8,6 @@ import gspread
 from google.oauth2.service_account import Credentials
 import os
 import pickle
-from filelock import FileLock
 
 # --- Google Sheets API 연결 ---
 def connect_gsheet():
@@ -24,21 +23,16 @@ def connect_gsheet():
 # 캐시된 데이터를 로드하는 함수
 def load_data_from_cache():
     cache_file = "data_cache.pkl"
-    lock = FileLock(cache_file + ".lock")
-    with lock:
-        if os.path.exists(cache_file):
-            with open(cache_file, "rb") as f:
-                return pickle.load(f)
-        else:
-            return None
+    if os.path.exists(cache_file):
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+    else:
+        return None
 
 # 캐시된 데이터를 저장하는 함수
 def save_data_to_cache(data):
-    cache_file = "data_cache.pkl"
-    lock = FileLock(cache_file + ".lock")
-    with lock:
-        with open(cache_file, "wb") as f:
-            pickle.dump(data, f)
+    with open("data_cache.pkl", "wb") as f:
+        pickle.dump(data, f)
 
 # Google Sheets 데이터 로드
 def load_data():
@@ -274,7 +268,7 @@ elif user_type == "학생용":
             "<h2 style='background-color: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 8px;'>🎰 세진코인 로또 게임 (1코인 차감)</h2>",
             unsafe_allow_html=True
         )
-        chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)), disabled=st.session_state.get("drawing", False))
+        chosen_numbers = st.multiselect("1부터 20까지 숫자 중 **3개**를 선택하세요:", list(range(1, 21)))
         # 선택한 번호 출력: 빨간색 배경, 흰색 텍스트, 글자 크기 150%
         if chosen_numbers:
             chosen_str = ", ".join(map(str, chosen_numbers))
@@ -366,7 +360,6 @@ elif user_type == "학생용":
         st.sidebar.write(f"**이름:** {selected_student}")
         st.sidebar.write(f"**보유 코인:** {student_coins:.1f}개")
         st.sidebar.markdown("---")
-    
 
 # --- 통계용 UI ---
 elif user_type == "통계용":
@@ -396,7 +389,6 @@ elif user_type == "통계용":
                     "당첨 보상": record["reward"],
                     "당첨 날짜": record["timestamp"]
                 })
-                
     st.write(pd.DataFrame(winners_list))
     st.write("로또 당첨 분석이 완료되었습니다.")
 
