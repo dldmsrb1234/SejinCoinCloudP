@@ -354,11 +354,7 @@ elif user_type == "학생용":
     st.sidebar.markdown("---")
 
         
-        st.sidebar.markdown("---")
-        st.sidebar.subheader("📌 학생 정보")
-        st.sidebar.write(f"**이름:** {selected_student}")
-        st.sidebar.write(f"**보유 코인:** {student_coins:.1f}개")
-        st.sidebar.markdown("---")
+       
 
 # --- 통계용 UI ---
 elif user_type == "통계용":
