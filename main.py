@@ -353,7 +353,7 @@ elif user_type == "학생용":
 
     st.sidebar.markdown("---")
 
-        student_coins = float(data.at[student_index, "세진코인"])
+        
         st.sidebar.markdown("---")
         st.sidebar.subheader("📌 학생 정보")
         st.sidebar.write(f"**이름:** {selected_student}")
